@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: api-hub
+  datasource:
+    url: jdbc:mysql://${API_HUB_MYSQL_HOST:localhost}:3306/${API_HUB_MYSQL_DB:apihub}?useSSL=false&serverTimezone=Asia/Shanghai
+    username: ${API_HUB_MYSQL_USER:apihub}
+    password: ${API_HUB_MYSQL_PASSWD:test-apihub}
+    druid:
+      initial-size: 5
+      min-idle: 10
+      max-active: 20
+      web-stat-filter:
+        exclusions: "*.js,*.gif,*.jpg,*.png,*.css,*.ico,/druid/*"
+      stat-view-servlet:
+        login-username: druid
+        login-password: druid
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+---
+spring:
+  config:
+    activate:
+      on-profile: staging
+  datasource:
+    url: jdbc:hsqldb:file:apihub
+    username: ${API_HUB_MYSQL_USER:apihub}
+    password: ${API_HUB_MYSQL_PASSWD}
+    driver-class-name: org.hsqldb.jdbcDriver
+
