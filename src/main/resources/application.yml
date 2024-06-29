@@ -2,9 +2,9 @@ spring:
   application:
     name: api-hub
   datasource:
-    url: jdbc:mysql://${API_HUB_MYSQL_HOST:localhost}:3306/${API_HUB_MYSQL_DB:apihub}?useSSL=false&serverTimezone=Asia/Shanghai
-    username: ${API_HUB_MYSQL_USER:apihub}
-    password: ${API_HUB_MYSQL_PASSWD:test-apihub}
+    url: jdbc:mysql://${APIHUB_MYSQL_HOST:localhost}:3306/${APIHUB_MYSQL_DB:apihub}?useSSL=false&serverTimezone=Asia/Shanghai
+    username: ${APIHUB_MYSQL_USER:apihub}
+    password: ${APIHUB_MYSQL_PASSWD:test-apihub}
     druid:
       initial-size: 5
       min-idle: 10
@@ -15,15 +15,45 @@ spring:
         login-username: druid
         login-password: druid
     driver-class-name: com.mysql.cj.jdbc.Driver
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      lettuce:
+        pool:
+          min-idle: 0
+          max-idle: 8
+          max-wait: -1ms
+          max-active: 16
+  mail:
+    host: smtp.qq.com
+    port: 587
+    username: ${APIHUB_QQ_MAIL_USERNAME}
+    password: ${APIHUB_QQ_MAIL_PASSWD} # 授权码
+  sms:
+    accessKeyId: ${APIHUB_ALIYUN_SMS_ACCESS_KEY_ID}
+    accessKeySecret: ${APIHUB_ALIYUN_SMS_ACCESS_KEY_SECRET}
+    signName: ${APIHUB_ALIYUN_SMS_SIGN_NAME}
+    templateCode: ${APIHUB_ALIYUN_SMS_TEMPLATE_CODE}
 
----
-spring:
-  config:
-    activate:
-      on-profile: staging
-  datasource:
-    url: jdbc:hsqldb:file:apihub
-    username: ${API_HUB_MYSQL_USER:apihub}
-    password: ${API_HUB_MYSQL_PASSWD}
-    driver-class-name: org.hsqldb.jdbcDriver
-
+# Sa-Token配置
+sa-token: # token名称 (同时也是cookie名称)/
+  token-name: Authorization
+  # token有效期，单位秒，-1代表永不过期
+  timeout: 2592000
+  # token临时有效期 (指定时间内无操作就视为token过期)，单位秒
+  active-timeout: -1
+  # 是否允许同一账号并发登录 (为false时新登录挤掉旧登录)
+  is-concurrent: true
+  # 在多人登录同一账号时，是否共用一个token (为false时每次登录新建一个token)
+  is-share: false
+  # token风格
+  token-style: uuid
+  # 是否输出操作日志
+  is-log: false
+  # 是否从cookie中读取token
+  is-read-cookie: false
+  # 是否从head中读取token
+  is-read-head: true

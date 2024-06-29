@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="zoz.cool.apihub.dao.mapper.ApihubAlipayOrderMapper">
+
+    <resultMap id="BaseResultMap" type="zoz.cool.apihub.dao.domain.ApihubAlipayOrder">
+            <id property="id" column="id" jdbcType="BIGINT"/>
+            <result property="userId" column="user_id" jdbcType="BIGINT"/>
+            <result property="orderId" column="order_id" jdbcType="VARCHAR"/>
+            <result property="qrCode" column="qr_code" jdbcType="VARCHAR"/>
+            <result property="subject" column="subject" jdbcType="VARCHAR"/>
+            <result property="amount" column="amount" jdbcType="DECIMAL"/>
+            <result property="tradeStatus" column="trade_status" jdbcType="VARCHAR"/>
+            <result property="tradeNo" column="trade_no" jdbcType="VARCHAR"/>
+            <result property="buyerId" column="buyer_id" jdbcType="VARCHAR"/>
+            <result property="gmtPayment" column="gmt_payment" jdbcType="TIMESTAMP"/>
+            <result property="buyerPayAmount" column="buyer_pay_amount" jdbcType="DECIMAL"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+            <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,user_id,order_id,
+        qr_code,subject,amount,
+        trade_status,trade_no,buyer_id,
+        gmt_payment,buyer_pay_amount,create_time,
+        update_time
+    </sql>
+</mapper>

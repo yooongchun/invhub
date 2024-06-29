@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="zoz.cool.apihub.dao.mapper.ApihubFileInfoMapper">
+
+    <resultMap id="BaseResultMap" type="zoz.cool.apihub.dao.domain.ApihubFileInfo">
+            <id property="id" column="id" jdbcType="BIGINT"/>
+            <result property="userId" column="user_id" jdbcType="BIGINT"/>
+            <result property="fileName" column="file_name" jdbcType="VARCHAR"/>
+            <result property="fileHash" column="file_hash" jdbcType="VARCHAR"/>
+            <result property="filePath" column="file_path" jdbcType="VARCHAR"/>
+            <result property="fileType" column="file_type" jdbcType="VARCHAR"/>
+            <result property="bucketName" column="bucket_name" jdbcType="VARCHAR"/>
+            <result property="objectName" column="object_name" jdbcType="VARCHAR"/>
+            <result property="deleted" column="deleted" jdbcType="TINYINT"/>
+            <result property="remark" column="remark" jdbcType="VARCHAR"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+            <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,user_id,file_name,
+        file_hash,file_path,file_type,
+        bucket_name,object_name,deleted,
+        remark,create_time,update_time
+    </sql>
+</mapper>
