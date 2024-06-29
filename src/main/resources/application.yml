@@ -38,6 +38,10 @@ spring:
     signName: ${APIHUB_ALIYUN_SMS_SIGN_NAME}
     templateCode: ${APIHUB_ALIYUN_SMS_TEMPLATE_CODE}
 
+server:
+  servlet:
+    context-path: /api/v1
+
 # Sa-Token配置
 sa-token: # token名称 (同时也是cookie名称)/
   token-name: Authorization
@@ -57,3 +61,7 @@ sa-token: # token名称 (同时也是cookie名称)/
   is-read-cookie: false
   # 是否从head中读取token
   is-read-head: true
+
+# 文档增强
+knife4j:
+  enable: true
