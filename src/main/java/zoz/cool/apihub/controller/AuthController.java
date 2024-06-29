@@ -7,13 +7,15 @@ import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.StrUtil;
 import com.wf.captcha.SpecCaptcha;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import zoz.cool.apihub.client.EmailClient;
 import zoz.cool.apihub.client.RedisClient;
 import zoz.cool.apihub.client.SmsClient;
@@ -28,6 +30,8 @@ import zoz.cool.apihub.vo.CaptchaVo;
 import zoz.cool.apihub.vo.LoginVo;
 import zoz.cool.apihub.vo.RegisterVo;
 import zoz.cool.apihub.vo.VerifyCodeVo;
+
+import java.util.Objects;
 
 /**
  * 注册管理
@@ -52,7 +56,8 @@ public class AuthController {
     @Operation(summary = "用户注册", description = "用户注册接口")
     @PostMapping("/register")
     @ResponseBody
-    public ApihubUser register(@Validated @RequestBody RegisterVo registerVo) {
+    @Transactional
+    public void register(@Validated @RequestBody RegisterVo registerVo) {
         ApihubUser apihubUser = new ApihubUser();
         BeanUtils.copyProperties(registerVo, apihubUser);
         // 用户名是否已存在
@@ -83,8 +88,8 @@ public class AuthController {
             throw new ApiException(HttpCode.VALIDATE_FAILED, "验证码不正确或已过期");
         }
         apihubUser.setPassword(ToolKit.getEncryptPassword(registerVo.getPassword()));
+        apihubUser.setUid(ToolKit.getUid());
         apihubUserService.save(apihubUser);
-        return apihubUser;
     }
 
     @Operation(summary = "图形验证码", description = "图形验证码接口")
@@ -103,6 +108,7 @@ public class AuthController {
     @Operation(summary = "验证码", description = "验证码接口")
     @PostMapping("/verify-code")
     public String verifyCode(@Validated @RequestBody VerifyCodeVo verifyCodeVo) {
+        log.info("请求体：{}", verifyCodeVo);
         if (verifyCodeVo.getPhone() == null && verifyCodeVo.getEmail() == null) {
             throw new ApiException(HttpCode.VALIDATE_FAILED, "邮箱和手机号不能同时为空");
         }
@@ -134,7 +140,7 @@ public class AuthController {
         if (StrUtil.isNotEmpty(loginVo.getUsername())) {// 账号密码登录
             Assert.notNull(loginVo.getPassword(), "密码不能为空！");
             user = apihubUserService.getUser(loginVo.getUsername());
-            if (user == null || !user.getPassword().equals(ToolKit.getEncryptPassword(loginVo.getPassword()))) {
+            if (!ToolKit.checkPassword(loginVo.getPassword(), user.getPassword())) {
                 throw new ApiException(HttpCode.VALIDATE_FAILED, "用户名或密码错误");
             }
         } else if (StrUtil.isNotEmpty(loginVo.getEmail()) || StrUtil.isNotEmpty(loginVo.getPhone())) {// 邮箱/手机验证码登录
@@ -151,11 +157,11 @@ public class AuthController {
         }
         Assert.notNull(user, "登录异常，用户信息不存在！");
         // 密码校验成功后登录，一行代码实现登录
-        StpUtil.login(user.getId());
+        StpUtil.login(user.getUid());
         // 获取当前登录用户Token信息
         SaTokenInfo saTokenInfo = StpUtil.getTokenInfo();
-        userService.insertLoginLog(user);
-        return saTokenInfo.toString();
+        userService.insertLoginLog(user, ((ServletRequestAttributes) Objects.requireNonNull(RequestContextHolder.getRequestAttributes())).getRequest());
+        return saTokenInfo.tokenValue;
     }
 
 }

@@ -4,10 +4,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 @Data
+@Schema(description = "验证码请求")
 public class CaptchaVo {
-    @Schema(name = "验证码key")
+    @Schema(description = "验证码key")
     private String key;
-    @Schema(name = "验证码图片")
+    @Schema(description = "验证码图片")
     private String image;
 
     public CaptchaVo(String key, String image) {

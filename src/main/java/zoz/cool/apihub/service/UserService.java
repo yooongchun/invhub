@@ -22,14 +22,10 @@ public class UserService {
     private ApihubLoginLogService apihubLoginLogService;
 
     @Async
-    public void insertLoginLog(ApihubUser user) {
+    public void insertLoginLog(ApihubUser user, HttpServletRequest request) {
         ApihubLoginLog apihubLoginLog = new ApihubLoginLog();
         apihubLoginLog.setUserId(user.getUid());
         apihubLoginLog.setCreateTime(LocalDateTime.now());
-        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        Assert.notNull(attributes, "无法获取请求信息！");
-        assert attributes != null;
-        HttpServletRequest request = attributes.getRequest();
         apihubLoginLog.setIp(RequestUtil.getRequestIp(request));
         apihubLoginLogService.save(apihubLoginLog);
         log.info("记录用户登录日志：{}", apihubLoginLog);
