@@ -10,4 +10,5 @@ import zoz.cool.apihub.dao.domain.ApihubUser;
  */
 public interface ApihubUserService extends IService<ApihubUser> {
     ApihubUser getUser(String key);
+    ApihubUser getUserByUid(Long uid);
 }

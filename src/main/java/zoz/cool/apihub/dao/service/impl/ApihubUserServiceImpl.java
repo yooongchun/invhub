@@ -22,6 +22,11 @@ public class ApihubUserServiceImpl extends ServiceImpl<ApihubUserMapper, ApihubU
         query.or().eq("phone", key);
         return getOne(query);
     }
+
+    @Override
+    public ApihubUser getUserByUid(Long uid) {
+        return getOne(new QueryWrapper<ApihubUser>().eq("uid", uid));
+    }
 }
 
 

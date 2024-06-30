@@ -65,3 +65,12 @@ sa-token: # token名称 (同时也是cookie名称)/
 # 文档增强
 knife4j:
   enable: true
+
+alipay:
+  gatewayUrl: https://openapi.alipay.com/gateway.do
+  appId: ${APIHUB_ALIPAY_APP_ID}
+  alipayPublicKey: ${APIHUB_ALIPAY_PUBLIC_KEY}
+  alipayPrivateKey: ${APIHUB_ALIPAY_PRIVATE_KEY}
+  returnUrl:
+  notifyUrl: ${APIHUB_ALIPAY_NOTIFY_URL}
+  maxQueryTime: 600

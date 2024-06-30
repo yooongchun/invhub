@@ -24,6 +24,8 @@ public class UserService {
         apihubLoginLog.setUserId(user.getUid());
         apihubLoginLog.setCreateTime(LocalDateTime.now());
         apihubLoginLog.setIp(RequestUtil.getRequestIp(request));
+        String userAgent = request.getHeader("User-Agent");
+        apihubLoginLog.setUserAgent(userAgent);
         apihubLoginLogService.save(apihubLoginLog);
         log.info("记录用户登录日志：{}", apihubLoginLog);
     }
