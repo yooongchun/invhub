@@ -55,7 +55,6 @@ public class AuthController {
 
     @Operation(summary = "用户注册", description = "用户注册接口")
     @PostMapping("/register")
-    @ResponseBody
     @Transactional
     public void register(@Validated @RequestBody RegisterVo registerVo) {
         ApihubUser apihubUser = new ApihubUser();
@@ -134,26 +133,30 @@ public class AuthController {
 
     @Operation(summary = "用户登录", description = "用户登录接口")
     @PostMapping("/login")
-    @ResponseBody
     public String login(@Validated @RequestBody LoginVo loginVo) {
         ApihubUser user;
-        if (StrUtil.isNotEmpty(loginVo.getUsername())) {// 账号密码登录
-            Assert.notNull(loginVo.getPassword(), "密码不能为空！");
-            user = apihubUserService.getUser(loginVo.getUsername());
+        String userKey = loginVo.getUsername();
+        if (userKey == null) {
+            userKey = loginVo.getEmail();
+        }
+        if (userKey == null) {
+            userKey = loginVo.getPhone();
+        }
+        Assert.notNull(userKey, "用户名、邮箱、手机号不能同时为空");
+        if (loginVo.getPassword() != null) {// 账号密码登录
+            user = apihubUserService.getUser(userKey);
             if (!ToolKit.checkPassword(loginVo.getPassword(), user.getPassword())) {
                 throw new ApiException(HttpCode.VALIDATE_FAILED, "用户名或密码错误");
             }
-        } else if (StrUtil.isNotEmpty(loginVo.getEmail()) || StrUtil.isNotEmpty(loginVo.getPhone())) {// 邮箱/手机验证码登录
-            Assert.notNull(loginVo.getVerifyCode(), "验证码不能为空！");
-            String key = StrUtil.isNotEmpty(loginVo.getEmail()) ? loginVo.getEmail() : loginVo.getPhone();
-            String verifyCode = (String) redisClient.get(CommonConstant.VERIFY_CODE_KEY_PREFIX + key);
+        } else if (loginVo.getVerifyCode() != null) {// 验证码登录
+            String verifyCode = (String) redisClient.get(CommonConstant.VERIFY_CODE_KEY_PREFIX + userKey);
             Assert.notNull(verifyCode, "验证码已过期！");
             if (!verifyCode.equals(loginVo.getVerifyCode())) {
                 throw new ApiException(HttpCode.VALIDATE_FAILED, "验证码错误");
             }
-            user = apihubUserService.getUser(key);
+            user = apihubUserService.getUser(userKey);
         } else {
-            throw new ApiException(HttpCode.VALIDATE_FAILED, "用户名、邮箱、手机号不能同时为空");
+            throw new ApiException(HttpCode.VALIDATE_FAILED, "验证码不能为空");
         }
         Assert.notNull(user, "登录异常，用户信息不存在！");
         // 密码校验成功后登录，一行代码实现登录
@@ -164,4 +167,28 @@ public class AuthController {
         return saTokenInfo.tokenValue;
     }
 
+    /**
+     * 找回密码
+     */
+    @Operation(summary = "找回密码", description = "找回密码")
+    @PostMapping("/forget-password")
+    public void changePassword(@Validated @RequestBody RegisterVo changePasswordVo) {
+        ApihubUser user = apihubUserService.getUser(changePasswordVo.getUsername());
+        if (user == null) {
+            throw new ApiException(HttpCode.VALIDATE_FAILED, "用户不存在");
+        }
+        if (!changePasswordVo.getPassword().equals(changePasswordVo.getPasswordAgain())) {
+            throw new ApiException(HttpCode.VALIDATE_FAILED, "两次密码不一致");
+        }
+        String key = StrUtil.isNotEmpty(user.getEmail()) ? user.getEmail() : user.getPhone();
+        if (key == null) {
+            throw new ApiException(HttpCode.VALIDATE_FAILED, "用户邮箱或手机号不存在");
+        }
+        String storeCode = (String) redisClient.get(CommonConstant.VERIFY_CODE_KEY_PREFIX + key);
+        if (StrUtil.isEmpty(storeCode) || !storeCode.equals(changePasswordVo.getVerifyCode())) {
+            throw new ApiException(HttpCode.VALIDATE_FAILED, "验证码不正确或已过期");
+        }
+        user.setPassword(ToolKit.getEncryptPassword(changePasswordVo.getPassword()));
+        apihubUserService.updateById(user);
+    }
 }
