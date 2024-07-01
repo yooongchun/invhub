@@ -145,7 +145,7 @@ public class AuthController {
         Assert.notNull(userKey, "用户名、邮箱、手机号不能同时为空");
         if (loginVo.getPassword() != null) {// 账号密码登录
             user = apihubUserService.getUser(userKey);
-            if (!ToolKit.checkPassword(loginVo.getPassword(), user.getPassword())) {
+            if (user == null || !ToolKit.checkPassword(loginVo.getPassword(), user.getPassword())) {
                 throw new ApiException(HttpCode.VALIDATE_FAILED, "用户名或密码错误");
             }
         } else if (loginVo.getVerifyCode() != null) {// 验证码登录

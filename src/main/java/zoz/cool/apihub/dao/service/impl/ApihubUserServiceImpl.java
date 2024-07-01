@@ -1,11 +1,14 @@
 package zoz.cool.apihub.dao.service.impl;
 
+import cn.hutool.core.lang.Assert;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
 import zoz.cool.apihub.dao.domain.ApihubUser;
 import zoz.cool.apihub.dao.mapper.ApihubUserMapper;
 import zoz.cool.apihub.dao.service.ApihubUserService;
+
+import java.math.BigDecimal;
 
 /**
  * @author yczha
@@ -26,6 +29,15 @@ public class ApihubUserServiceImpl extends ServiceImpl<ApihubUserMapper, ApihubU
     @Override
     public ApihubUser getUserByUid(Long uid) {
         return getOne(new QueryWrapper<ApihubUser>().eq("uid", uid));
+    }
+
+    public BigDecimal addBalance(Long uid, BigDecimal amount) {
+        ApihubUser user = getUserByUid(uid);
+        Assert.notNull(user, "用户不存在");
+
+        user.setBalance(user.getBalance().add(amount));
+        updateById(user);
+        return user.getBalance();
     }
 }
 

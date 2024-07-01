@@ -2,6 +2,8 @@ package zoz.cool.apihub.utils;
 
 import cn.hutool.crypto.digest.BCrypt;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -30,5 +32,9 @@ public class ToolKit {
         long timestamp = System.currentTimeMillis();
         int randomNum = ThreadLocalRandom.current().nextInt(1000, 10000);
         return timestamp * 10000 + randomNum;
+    }
+
+    public static String genOrderId() {
+        return new SimpleDateFormat("yyyyMMdd").format(new Date()) + System.currentTimeMillis();
     }
 }

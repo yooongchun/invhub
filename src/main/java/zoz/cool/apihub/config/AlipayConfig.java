@@ -53,4 +53,12 @@ public class AlipayConfig {
      * 生成签名字符串所使用的签名算法类型
      */
     private final String signType = "RSA2";
+
+    public String getAlipayPrivateKey() {
+        return alipayPrivateKey.replace("\\n", "\n");
+    }
+
+    public String getAlipayPublicKey() {
+        return alipayPublicKey.replace("\\n", "\n");
+    }
 }

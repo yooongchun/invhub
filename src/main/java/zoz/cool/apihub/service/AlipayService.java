@@ -21,7 +21,8 @@ public class AlipayService {
     @Resource
     private AlipayConfig alipayConfig;
     @Resource
-    private ApihubAlipayOrderService alipayOrderService;
+    private ApihubAlipayOrderService apihubAlipayOrderService;
+
 
     public String notify(Map<String, String> params) {
         String result = "failure";
@@ -42,9 +43,9 @@ public class AlipayService {
                 alipayOrder.setOrderId(params.get("out_trade_no"));
                 log.info("[notify]订单支付成功，alipayOrder:{}", JSONUtil.toJsonStr(alipayOrder));
                 // 根据orderId查询订单，并修改订单状态
-                ApihubAlipayOrder order = alipayOrderService.getOne(new QueryWrapper<ApihubAlipayOrder>().eq("order_id", alipayOrder.getOrderId()));
+                ApihubAlipayOrder order = apihubAlipayOrderService.getOne(new QueryWrapper<ApihubAlipayOrder>().eq("order_id", alipayOrder.getOrderId()));
                 BeanUtils.copyProperties(alipayOrder, order);
-                alipayOrderService.updateById(order);
+                apihubAlipayOrderService.updateById(order);
             } else {
                 log.warn("[notify]订单未支付成功，trade_status:{}", tradeStatus);
             }
@@ -53,4 +54,5 @@ public class AlipayService {
         }
         return result;
     }
+
 }
