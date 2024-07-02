@@ -1,6 +1,7 @@
 package zoz.cool.apihub.service;
 
 import cn.dev33.satoken.stp.StpUtil;
+import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSONObject;
 import com.alipay.api.AlipayApiException;
@@ -19,7 +20,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.BeanUtils;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import zoz.cool.apihub.config.AlipayConfig;
 import zoz.cool.apihub.dao.domain.ApihubAlipayOrder;
@@ -33,6 +33,9 @@ import zoz.cool.apihub.vo.AlipayOrderVo;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
@@ -59,21 +62,14 @@ public class AlipayOrderService {
         // 调用支付宝创建订单
         String orderId = ToolKit.genOrderId();
         alipayOrderVo.setOrderId(orderId);
-        String qrCode = makeOrder(alipayOrderVo);
-        // 创建成功
-        ApihubAlipayOrder alipayOrder = new ApihubAlipayOrder();
-        BeanUtils.copyProperties(alipayOrderVo, alipayOrder);
-        alipayOrder.setTradeStatus(AlipayOrderStatus.WAIT_BUYER_PAY.name());
-        alipayOrder.setQrCode(qrCode);
-        alipayOrder.setUserId(StpUtil.getLoginIdAsLong());
-        apihubAlipayOrderService.save(alipayOrder);
+        ApihubAlipayOrder order = makeOrder(alipayOrderVo);
         // 异步查询并更新订单状态
         // TODO: 仅需在开发环境中使用此项，生产环境可依赖于支付宝的异步通知
-        updateOrder(alipayOrder.getOrderId());
-        return alipayOrder;
+        asyncUpdateOrder(order.getTradeNo());
+        return order;
     }
 
-    private String makeOrder(AlipayOrderVo alipayOrderVo) {
+    private ApihubAlipayOrder makeOrder(AlipayOrderVo alipayOrderVo) {
         AlipayTradePrecreateRequest request = new AlipayTradePrecreateRequest();
         if (StrUtil.isNotEmpty(alipayConfig.getNotifyUrl())) {
             //异步接收地址，公网可访问
@@ -90,6 +86,7 @@ public class AlipayOrderService {
         String tip = "请求支付宝创建订单失败";
         try {
             result = alipayClient.execute(request).getBody();
+            log.info("支付宝创建订单返回结果: {}", result);
         } catch (AlipayApiException e) {
             log.error(tip, e);
             throw new ApiException(tip);
@@ -106,7 +103,16 @@ public class AlipayOrderService {
             log.error("{}, body: {}", tip, result);
             throw new ApiException(tip);
         }
-        return node.get("qr_code").asText();
+        // 创建成功， 返回订单对象
+        ApihubAlipayOrder alipayOrder = new ApihubAlipayOrder();
+        BeanUtils.copyProperties(alipayOrderVo, alipayOrder);
+        alipayOrder.setTradeStatus(AlipayOrderStatus.WAIT_BUYER_PAY.name());
+        alipayOrder.setQrCode(node.get("qr_code").asText());
+        alipayOrder.setUserId(StpUtil.getLoginIdAsLong());
+        alipayOrder.setTradeNo(node.get("out_trade_no").asText());
+        apihubAlipayOrderService.save(alipayOrder);
+
+        return alipayOrder;
     }
 
     @NotNull
@@ -120,62 +126,67 @@ public class AlipayOrderService {
         bizContent.put("subject", alipayOrderParam.getSubject());
         bizContent.put("scene", "bar_code");
         return bizContent;
-
     }
 
-    @Async
-    public void updateOrder(String outTradeNo) {
-        LocalDateTime expireTime = LocalDateTime.now().plusMinutes(alipayConfig.getMaxQueryTime());
-        AlipayOrderStatus prevTradeStatus = AlipayOrderStatus.WAIT_BUYER_PAY;
-        while (true) {
-            // 是否超时
-            if (LocalDateTime.now().isAfter(expireTime)) {
-                log.warn("[AlipayOrder.updateOrder] 支付超时，tradeStatus:{}", prevTradeStatus);
-                return;
+    public boolean updateOrder(String outTradeNo) {
+        ApihubAlipayOrder order = apihubAlipayOrderService.getByOrderId(outTradeNo);
+        Assert.notNull(order, "订单不存在 " + outTradeNo);
+        AlipayOrderStatus prevTradeStatus = AlipayOrderStatus.getOrderStatusByName(order.getTradeStatus());
+        // 查询状态
+        AlipayTradeQueryResponse trade = queryOrder(outTradeNo);
+        if (trade == null) {
+            log.warn("[AlipayOrder.updateOrder] 查询订单状态失败，outTradeNo:{}", outTradeNo);
+            return false;
+        }
+        // 用户还未扫码，此时提示订单不存在
+        if (trade.getSubCode() != null && trade.getSubCode().equals("ACQ.TRADE_NOT_EXIST")) {
+            log.warn("[AlipayOrder.updateOrder] 等待用户扫码, response.body: {}", trade.getBody());
+            return false;
+        }
+        AlipayOrderStatus currStatus = AlipayOrderStatus.getOrderStatusByName(trade.getTradeStatus());
+        log.info("[AlipayOrder.updateOrder] 当前订单状态: {}", currStatus);
+        switch (currStatus) {
+            case TRADE_CLOSED, TRADE_FINISHED, TRADE_SUCCESS -> {
+                // 交易完成，停止查询
+                order.setTradeStatus(currStatus.name());
+                order.setBuyerId(trade.getBuyerUserId());
+                order.setTradeNo(trade.getTradeNo());
+                order.setGmtPayment(TimeUtil.dateToLocalDateTime(trade.getSendPayDate()));
+                apihubAlipayOrderService.updateById(order);
+                if (currStatus.equals(AlipayOrderStatus.TRADE_SUCCESS)) {
+                    // 交易成功，则需要更新账户余额
+                    BigDecimal balance = accountService.addBalance(order.getUserId(), order.getAmount());
+                    log.info("[AlipayOrder.updateOrder] 交易成功，更新账户，amount: {}, after: {}", order.getAmount(), balance);
+                }
+                log.info("[AlipayOrder.updateOrder] 交易完成，currStatus: {}", currStatus);
+                return true;
             }
-            // 查询状态
-            AlipayTradeQueryResponse trade = queryOrder(outTradeNo);
-            if (trade == null) {
-                return;
-            }
-            // 支付失败
-            if (!trade.isSuccess()) {
-                log.warn("[AlipayOrder.updateOrder] 支付失败, response.body: {}", trade.getBody());
-                return;
-            }
-            AlipayOrderStatus status = AlipayOrderStatus.getOrderStatusByName(trade.getTradeStatus());
-            if (status.equals(prevTradeStatus)) {
-                log.info("[AlipayOrder.updateOrder] 订单状态未改变，tradeStatus:{}", trade.getTradeStatus());
-                return;
-            }
-            log.info("[AlipayOrder.updateOrder] 更新订单状态，tradeStatus:{}-->{}", prevTradeStatus, status);
-            prevTradeStatus = status;
-            // 将支付宝返回的订单状态更新到数据库
-            ApihubAlipayOrder order = apihubAlipayOrderService.getByOrderId(outTradeNo);
-            order.setTradeStatus(status.name());
-            order.setBuyerId(trade.getBuyerUserId());
-            order.setBuyerPayAmount(new BigDecimal(trade.getBuyerPayAmount()));
-            order.setTradeNo(trade.getTradeNo());
-            order.setGmtPayment(TimeUtil.dateToLocalDateTime(trade.getSendPayDate()));
-            apihubAlipayOrderService.updateById(order);
-            // 订单完成，则需要更新账户余额
-            if (status.equals(AlipayOrderStatus.TRADE_SUCCESS)) {
-                BigDecimal balance = accountService.addBalance(order.getUserId(), order.getAmount());
-                log.info("[AlipayOrder.updateOrder] 更新账户，account:{}-->{}", order.getAmount(), balance);
-                return;
-            }
-            if (status.equals(AlipayOrderStatus.TRADE_FINISHED)) {
-                log.info("[AlipayOrder.updateOrder] 订单完成，tradeStatus: {}", status);
-                return;
-            }
-            // 否则，休眠5秒后再次查询
-            try {
-                Thread.sleep(5000);
-            } catch (InterruptedException e) {
-                log.error("[AlipayOrder.AsyncQuery] 线程休眠异常", e);
-                break;
+            default -> {
+                if (!currStatus.equals(prevTradeStatus)) {
+                    log.info("[AlipayOrder.updateOrder] 更新订单状态：{} --> {}", prevTradeStatus, currStatus);
+                    order.setTradeStatus(currStatus.name());
+                    apihubAlipayOrderService.updateById(order);
+                }
+                return false;
             }
         }
+    }
+
+    public void asyncUpdateOrder(String outTradeNo) {
+        LocalDateTime expireTime = LocalDateTime.now().plusMinutes(alipayConfig.getMaxQueryTime());
+        ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+        executorService.scheduleAtFixedRate(() -> {
+            if (LocalDateTime.now().isAfter(expireTime)) { //如已超时，则退出
+                ApihubAlipayOrder order = apihubAlipayOrderService.getByOrderId(outTradeNo);
+                order.setTradeStatus(AlipayOrderStatus.TRADE_CLOSED.name());
+                apihubAlipayOrderService.updateById(order);
+                executorService.shutdown();
+            }
+            // 否则查询并更新状态
+            if (updateOrder(outTradeNo)) {
+                executorService.shutdown();
+            }
+        }, 0, 5, TimeUnit.SECONDS);
     }
 
     private AlipayTradeQueryResponse queryOrder(String outTradeNo) {

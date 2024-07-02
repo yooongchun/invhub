@@ -1,8 +1,12 @@
 package zoz.cool.apihub.config;
 
 
+import com.alipay.api.AlipayClient;
+import com.alipay.api.DefaultAlipayClient;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
@@ -11,6 +15,7 @@ import org.springframework.context.annotation.Configuration;
 @Data
 @Configuration
 @ConfigurationProperties(prefix = "alipay")
+@Slf4j
 public class AlipayConfig {
     /**
      * 支付宝网关
@@ -54,11 +59,9 @@ public class AlipayConfig {
      */
     private final String signType = "RSA2";
 
-    public String getAlipayPrivateKey() {
-        return alipayPrivateKey.replace("\\n", "\n");
-    }
-
-    public String getAlipayPublicKey() {
-        return alipayPublicKey.replace("\\n", "\n");
+    @Bean
+    public AlipayClient alipayClient(AlipayConfig config) {
+        return new DefaultAlipayClient(config.getGatewayUrl(), config.getAppId(), config.getAlipayPrivateKey(),
+                config.getFormat(), config.getCharset(), config.getAlipayPublicKey(), config.getSignType());
     }
 }

@@ -10,15 +10,13 @@ public enum AlipayOrderStatus {
     TRADE_SUCCESS(3, "交易支付成功"),
     TRADE_FINISHED(4, "交易结束，不可退款");
 
-    private final String name;
 
-    AlipayOrderStatus(int code, String name) {
-        this.name = name;
+    AlipayOrderStatus(int code, String desc) {
     }
 
     public static AlipayOrderStatus getOrderStatusByName(String name) {
         for (AlipayOrderStatus status : AlipayOrderStatus.values()) {
-            if (status.name.equals(name)) {
+            if (status.name().equals(name)) {
                 return status;
             }
         }
