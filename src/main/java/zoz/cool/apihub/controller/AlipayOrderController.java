@@ -1,6 +1,9 @@
 package zoz.cool.apihub.controller;
 
 import cn.dev33.satoken.annotation.SaCheckLogin;
+import cn.dev33.satoken.stp.StpUtil;
+import cn.hutool.core.lang.Assert;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
@@ -9,6 +12,8 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import zoz.cool.apihub.dao.domain.ApihubAlipayOrder;
 import zoz.cool.apihub.dao.service.ApihubAlipayOrderService;
+import zoz.cool.apihub.enums.HttpCode;
+import zoz.cool.apihub.exception.ApiException;
 import zoz.cool.apihub.service.AlipayOrderService;
 import zoz.cool.apihub.vo.AlipayOrderVo;
 
@@ -35,6 +40,18 @@ public class AlipayOrderController {
     @Operation(summary = "查询订单", description = "查询订单")
     @GetMapping("/{orderId}")
     public ApihubAlipayOrder orderInfo(@PathVariable String orderId) {
-        return apihubAlipayOrderService.getByOrderId(orderId);
+        ApihubAlipayOrder order = apihubAlipayOrderService.getByOrderId(orderId);
+        Assert.notNull(order, "订单不存在");
+        if (order.getUserId() != StpUtil.getLoginIdAsLong()) {
+            throw new ApiException(HttpCode.FORBIDDEN);
+        }
+        return order;
+    }
+
+    @Operation(summary = "按用户查订单", description = "按用户查询订单")
+    @GetMapping("/list")
+    public Page<ApihubAlipayOrder> orderList(@RequestParam(required = false, defaultValue = "1") Integer page,
+                                             @RequestParam(required = false, defaultValue = "10") Integer pageSize) {
+        return apihubAlipayOrderService.listByUserId(StpUtil.getLoginIdAsLong(), page, pageSize);
     }
 }

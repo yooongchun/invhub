@@ -24,7 +24,7 @@ public class GlobalExceptionHandler {
     @ResponseBody
     @ExceptionHandler(value = NotLoginException.class)
     public ApiResponse<String> handlerNotLoginException(NotLoginException e) {
-        log.error("未登录异常", e);
+        // log.error("未登录异常", e);
         return ApiResponse.unauthorized(e.getMessage());
     }
 
@@ -32,7 +32,7 @@ public class GlobalExceptionHandler {
     @ResponseBody
     @ExceptionHandler(value = NotRoleException.class)
     public ApiResponse<String> handlerNotRoleException(NotRoleException e) {
-        log.error("未授权异常", e);
+        // log.error("未授权异常", e);
         return ApiResponse.forbidden(e.getMessage());
     }
 
@@ -40,14 +40,14 @@ public class GlobalExceptionHandler {
     @ResponseBody
     @ExceptionHandler(value = NotPermissionException.class)
     public ApiResponse<String> handlerNotPermissionException(NotPermissionException e) {
-        log.error("未授权异常", e);
+        // log.error("未授权异常", e);
         return ApiResponse.forbidden(e.getMessage());
     }
 
     @ResponseBody
     @ExceptionHandler(value = ApiException.class)
     public ApiResponse<String> handleApiException(ApiException e) {
-        log.error("Api请求异常", e);
+        // log.error("Api请求异常", e);
         return e.getErrorCode() != null ? ApiResponse.failed(e.getErrorCode(), e.getMessage()) : ApiResponse.failed(e.getMessage());
     }
 
@@ -55,7 +55,7 @@ public class GlobalExceptionHandler {
     @ResponseBody
     @ExceptionHandler(value = Exception.class)
     public ApiResponse<String> handle(Exception e) {
-        log.error("未知异常", e);
+        // log.error("未知异常", e);
         return ApiResponse.failed(HttpCode.INTERNAL_ERROR, e.getMessage());
     }
 
@@ -63,14 +63,14 @@ public class GlobalExceptionHandler {
     @ResponseBody
     @ExceptionHandler(value = MethodArgumentNotValidException.class)
     public ApiResponse<String> handleValidException(MethodArgumentNotValidException e) {
-        log.error("请求参数校验异常", e);
+        // log.error("请求参数校验异常", e);
         return ApiResponse.validateFailed(e.getMessage());
     }
 
     @ResponseBody
     @ExceptionHandler(value = MaxUploadSizeExceededException.class)
     public ApiResponse<String> handleMaxUploadSizeExceededException(BindException e) {
-        log.error("文件大小超出限制", e);
+        // log.error("文件大小超出限制", e);
         return ApiResponse.failed("文件大小超出限制");
     }
 }
