@@ -11,11 +11,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import zoz.cool.apihub.dao.domain.ApihubAlipayOrder;
+import zoz.cool.apihub.dao.domain.ApihubUser;
 import zoz.cool.apihub.dao.service.ApihubAlipayOrderService;
 import zoz.cool.apihub.enums.HttpCode;
 import zoz.cool.apihub.exception.ApiException;
 import zoz.cool.apihub.service.AlipayOrderService;
+import zoz.cool.apihub.service.UserService;
 import zoz.cool.apihub.vo.AlipayOrderVo;
+
+import java.util.Objects;
 
 @Slf4j
 @RestController
@@ -24,11 +28,12 @@ import zoz.cool.apihub.vo.AlipayOrderVo;
 @RequestMapping("/alipay/order")
 @SaCheckLogin
 public class AlipayOrderController {
-
     @Resource
     private AlipayOrderService alipayOrderService;
     @Resource
     private ApihubAlipayOrderService apihubAlipayOrderService;
+    @Resource
+    private UserService userService;
 
     @Operation(summary = "新建订单", description = "新建订单")
     @PostMapping("/")
@@ -42,7 +47,8 @@ public class AlipayOrderController {
     public ApihubAlipayOrder orderInfo(@PathVariable String orderId) {
         ApihubAlipayOrder order = apihubAlipayOrderService.getByOrderId(orderId);
         Assert.notNull(order, "订单不存在");
-        if (order.getUserId() != StpUtil.getLoginIdAsLong()) {
+        ApihubUser user = userService.getLoginUser();
+        if (!Objects.equals(user.getUid(), order.getUserId()) && user.getAdmin() == 0) {
             throw new ApiException(HttpCode.FORBIDDEN);
         }
         return order;

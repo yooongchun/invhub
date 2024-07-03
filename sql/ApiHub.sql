@@ -21,11 +21,11 @@ CREATE TABLE `apihub_user`
   ROW_FORMAT = DYNAMIC;
 
 INSERT INTO `apihub_user`
-VALUES (1, 1000,'admin', 1, 1.0, '$2a$10$nLBA0P7yBSh9csajrFoUGedUJOhM0CjoUo3H1i6FpHamw5AY35S9O', 18217235290,
+VALUES (1, 1000,'admin', 1, 1.0, '$2a$10$.BTrIQ9NU8j6/ZQ8o.7dHeku8uon.vK3Y2BO1To7mfx4HtJCBnjce', 18217235290,
         '1729465178@qq.com', 'https://cravatar.cn/avatar/4dc14aeb1f51b357657b9a15da59dbd3?d=monsterid&s=200',
         '超管', 0, NOW(), NOW());
 INSERT INTO `apihub_user`
-VALUES (2, 1001, 'apihub', 0, 1.2, '$2a$10$nLBA0P7yBSh9csajrFoUGedUJOhM0CjoUo3H1i6FpHamw5AY35S9O', '', 'yooongchun@qq.com',
+VALUES (2, 1001, 'apihub', 0, 1.2, '$2a$10$.BTrIQ9NU8j6/ZQ8o.7dHeku8uon.vK3Y2BO1To7mfx4HtJCBnjce', '', 'yooongchun@qq.com',
         'https://cravatar.cn/avatar/4dc14aeb1f51b357657b9a15da59dbd3?d=monsterid&s=200', '用户', 0, NOW(), NOW());
 
 DROP TABLE IF EXISTS `apihub_login_log`;
@@ -93,6 +93,7 @@ CREATE TABLE `apihub_file_info`
     `file_hash`   varchar(128)   NOT NULL DEFAULT '' COMMENT '文件hash',
     `file_path`   varchar(1000)  NOT NULL DEFAULT '' COMMENT '文件路径',
     `file_type`   varchar(64)    NOT NULL DEFAULT '' COMMENT '文件类型',
+    `file_size`    bigint(20) UNSIGNED NOT NULL DEFAULT 0 COMMENT '文件大小',
     `bucket_name` varchar(50)    NOT NULL DEFAULT '' COMMENT 'minio bucket name',
     `object_name` varchar(1000)  NOT NULL DEFAULT '' COMMENT 'minio object name',
     `deleted`   tinyint(1)     NOT NULL DEFAULT 0 COMMENT '是否删除:0-->否，1-->是',

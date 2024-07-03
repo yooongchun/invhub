@@ -74,3 +74,20 @@ alipay:
   returnUrl:
   notifyUrl: ${APIHUB_ALIPAY_NOTIFY_URL}
   maxQueryTime: 600
+
+storage:
+  type: ${APIHUB_STORAGE_TYPE:local}
+  supportedContentType: image/jpeg,image/png,image/bmp,image/webp,application/pdf
+  sizeLimit: 5 # MB
+  local:
+    root: ${APIHUB_STORAGE_LOCAL_ROOT:data}
+  aliyun:
+    endpoint: ${APIHUB_ALIYUN_OSS_ENDPOINT} # oss对外服务的访问域名
+    accessKeyId: ${APIHUB_ALIYUN_OSS_ACCESS_KEY_ID} # 访问身份验证中用到用户标识
+    accessKeySecret: ${APIHUB_ALIYUN_OSS_ACCESS_KEY_SECRET} # 用户用于加密签名字符串和oss用来验证签名字符串的密钥
+    bucketName: ${APIHUB_ALIYUN_OSS_BUCKET_NAME:apihub} # oss的存储空间
+  minio:
+    endpoint: ${APIHUB_MINIO_ENDPOINT} #MinIO服务所在地址
+    bucketName: apihub #存储桶名称
+    accessKey: ${APIHUB_MINIO_ACCESS_KEY_ID} #访问的key
+    secretKey: ${APIHUB_MINIO_ACCESS_KEY_SECRET} #访问的秘钥

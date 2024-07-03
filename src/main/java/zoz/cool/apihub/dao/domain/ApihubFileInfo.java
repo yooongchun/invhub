@@ -47,6 +47,11 @@ public class ApihubFileInfo implements Serializable {
     private String fileType;
 
     /**
+     * 文件大小
+     */
+    private Long fileSize;
+
+    /**
      * minio bucket name
      */
     private String bucketName;
