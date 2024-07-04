@@ -119,7 +119,7 @@ CREATE TABLE `apihub_invoice_info`
     `inv_code`    varchar(32)    NOT NULL DEFAULT '' COMMENT '发票代码',
     `inv_num`     varchar(32)    NOT NULL DEFAULT '' COMMENT '发票号码',
     `inv_chk`     varchar(32)    NOT NULL DEFAULT '' COMMENT '校验码',
-    `inv_date`    date           NOT NULL COMMENT '开票日期',
+    `inv_date`    date            DEFAULT NULL COMMENT '开票日期',
     `inv_money`   decimal(10, 2) NOT NULL DEFAULT 0.0 COMMENT '开具金额',
     `inv_tax`     varchar(32)    NOT NULL DEFAULT '' COMMENT '税额',
     `inv_total`   varchar(32)   NOT NULL  DEFAULT '' COMMENT '价税合计',
@@ -135,4 +135,23 @@ CREATE TABLE `apihub_invoice_info`
 ) ENGINE = InnoDB
   AUTO_INCREMENT = 1
   CHARACTER SET = utf8mb4 COMMENT = '发票信息表'
+  ROW_FORMAT = DYNAMIC;
+
+
+DROP TABLE IF EXISTS `apihub_product_price`;
+CREATE TABLE `apihub_product_price`
+(
+    `id`          bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `product_code` varchar(64) NOT NULL DEFAULT '' COMMENT '产品编码',
+    `product_name` varchar(255) NOT NULL DEFAULT '' COMMENT '产品名称',
+    `price` decimal(10, 4) NOT NULL DEFAULT 0.0 COMMENT '产品定价',
+
+    `deleted`   tinyint(1)     NOT NULL DEFAULT 0 COMMENT '是否删除:0-->否，1-->是',
+    `remark`      varchar(255)   NOT NULL DEFAULT '' COMMENT '备注信息',
+    `create_time` datetime       DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `update_time` datetime       DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`)
+) ENGINE = InnoDB
+  AUTO_INCREMENT = 1
+  CHARACTER SET = utf8mb4 COMMENT = '产品定价表'
   ROW_FORMAT = DYNAMIC;

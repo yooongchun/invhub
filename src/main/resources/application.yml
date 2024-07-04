@@ -77,7 +77,6 @@ alipay:
 
 storage:
   type: ${APIHUB_STORAGE_TYPE:local}
-  supportedContentType: image/jpeg,image/png,image/bmp,image/webp,application/pdf
   sizeLimit: 5 # MB
   local:
     root: ${APIHUB_STORAGE_LOCAL_ROOT:data}

@@ -19,4 +19,9 @@ public class TimeUtil {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         return date.format(formatter);
     }
+
+    public static LocalDate parseLocalDate(String time) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy年MM月dd日");
+        return LocalDate.parse(time, formatter);
+    }
 }

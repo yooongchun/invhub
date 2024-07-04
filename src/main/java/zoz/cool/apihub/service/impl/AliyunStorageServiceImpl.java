@@ -61,7 +61,7 @@ public class AliyunStorageServiceImpl implements StorageService {
             return ossObject.getObjectContent().readAllBytes();
         } catch (Throwable e) {
             log.error("下载文件失败", e);
+            throw new ApiException(HttpCode.INTERNAL_ERROR, "下载文件失败");
         }
-        return null;
     }
 }

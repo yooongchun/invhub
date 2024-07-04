@@ -6,13 +6,16 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import zoz.cool.apihub.dao.domain.ApihubLoginLog;
 import zoz.cool.apihub.dao.domain.ApihubUser;
 import zoz.cool.apihub.dao.service.ApihubLoginLogService;
 import zoz.cool.apihub.dao.service.ApihubUserService;
+import zoz.cool.apihub.enums.HttpCode;
 import zoz.cool.apihub.exception.ApiException;
 import zoz.cool.apihub.utils.RequestUtil;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Service
@@ -42,5 +45,14 @@ public class UserService {
             throw new ApiException("用户不存在");
         }
         return user;
+    }
+
+    @Transactional
+    public void deduceBalance(ApihubUser user, BigDecimal amount) {
+        if (user.getBalance().compareTo(amount) < 0) {
+            throw new ApiException(HttpCode.BUSINESS_FAILED, "余额不足");
+        }
+        user.setBalance(user.getBalance().subtract(amount));
+        apihubUserService.updateById(user);
     }
 }
