@@ -1,0 +1,55 @@
+<table width="100%" border="1" cellspacing="1" cellpadding="4" bgcolor="#AFEEEE" class="tabtop13" align="center"
+       style="color: #FF7F50; font-weight: bold;">
+    <tr>
+        <th colspan="4">昨日报表</th>
+    </tr>
+    <tr style="color:#00BFFF">
+        <td colspan="2">新增用户</td>
+        <td colspan="2" th:text="${dayReport.userNum}"></td>
+    </tr>
+    <tr style="color:#00BFFF">
+        <td colspan="2">新增订单</td>
+        <td colspan="2" th:text="${dayReport.orderNum}"></td>
+    </tr>
+    <tr style="color:#00BFFF">
+        <td colspan="2">订单金额</td>
+        <td colspan="2" th:text="${dayReport.orderAmount}"></td>
+    </tr>
+    <tr style="color:#00BFFF">
+        <td colspan="2">消费金额</td>
+        <td colspan="2" th:text="${dayReport.consumeAmount}"></td>
+    </tr>
+    <tr>
+        <th colspan="4">周期报表</th>
+    </tr>
+    <tr style="color:#00BFFF">
+        <td>周期</td>
+        <td>用户</td>
+        <td>订单</td>
+        <td>金额</td>
+    </tr>
+    <tr style="color:#00BFFF">
+        <td>本周</td>
+        <td th:text="${weekReport.userNum}"></td>
+        <td th:text="${weekReport.orderNum}"></td>
+        <td th:text="${weekReport.orderAmount}"></td>
+    </tr>
+    <tr style="color:#00BFFF">
+        <td>本月</td>
+        <td th:text="${monthReport.userNum}"></td>
+        <td th:text="${monthReport.orderNum}"></td>
+        <td th:text="${monthReport.orderAmount}"></td>
+    </tr>
+    <tr style="color:#00BFFF">
+        <td>本年</td>
+        <td th:text="${yearReport.userNum}"></td>
+        <td th:text="${yearReport.orderNum}"></td>
+        <td th:text="${yearReport.orderAmount}"></td>
+    </tr>
+    <tr style="color:#00BFFF">
+        <td>全部</td>
+        <td th:text="${allReport.userNum}"></td>
+        <td th:text="${allReport.orderNum}"></td>
+        <td th:text="${allReport.orderAmount}"></td>
+    </tr>
+</table>

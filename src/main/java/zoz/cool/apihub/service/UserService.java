@@ -8,12 +8,17 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zoz.cool.apihub.dao.domain.ApihubLoginLog;
+import zoz.cool.apihub.dao.domain.ApihubTransactionRecord;
 import zoz.cool.apihub.dao.domain.ApihubUser;
 import zoz.cool.apihub.dao.service.ApihubLoginLogService;
+import zoz.cool.apihub.dao.service.ApihubTransactionRecordService;
 import zoz.cool.apihub.dao.service.ApihubUserService;
 import zoz.cool.apihub.enums.HttpCode;
+import zoz.cool.apihub.enums.ProductNameEnum;
+import zoz.cool.apihub.enums.TransactionStatusEnum;
 import zoz.cool.apihub.exception.ApiException;
 import zoz.cool.apihub.utils.RequestUtil;
+import zoz.cool.apihub.utils.ToolKit;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -25,6 +30,8 @@ public class UserService {
     private ApihubLoginLogService apihubLoginLogService;
     @Resource
     private ApihubUserService apihubUserService;
+    @Resource
+    private ApihubTransactionRecordService apihubTransactionRecordService;
 
     @Async
     public void insertLoginLog(ApihubUser user, HttpServletRequest request) {
@@ -48,11 +55,21 @@ public class UserService {
     }
 
     @Transactional
-    public void deduceBalance(ApihubUser user, BigDecimal amount) {
+    public void deduceBalance(ApihubUser user, BigDecimal amount, ProductNameEnum transactionType) {
         if (user.getBalance().compareTo(amount) < 0) {
             throw new ApiException(HttpCode.BUSINESS_FAILED, "余额不足");
         }
         user.setBalance(user.getBalance().subtract(amount));
         apihubUserService.updateById(user);
+        // 创建交易记录
+        ApihubTransactionRecord record = new ApihubTransactionRecord();
+        record.setUserId(user.getUid());
+        record.setTransactionId(ToolKit.getUUID());
+        record.setTransactionAmount(amount);
+        record.setRemark(transactionType.getName());
+        record.setTransactionStatus(TransactionStatusEnum.SUCCEED.name());
+        record.setTransactionTime(LocalDateTime.now());
+        record.setTransactionType(transactionType.name());
+        apihubTransactionRecordService.save(record);
     }
 }

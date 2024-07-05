@@ -18,7 +18,7 @@ import zoz.cool.apihub.config.StorageConfig;
 import zoz.cool.apihub.dao.domain.ApihubFileInfo;
 import zoz.cool.apihub.dao.domain.ApihubUser;
 import zoz.cool.apihub.dao.service.ApihubFileInfoService;
-import zoz.cool.apihub.enums.FileType;
+import zoz.cool.apihub.enums.FileTypeEnum;
 import zoz.cool.apihub.enums.HttpCode;
 import zoz.cool.apihub.exception.ApiException;
 import zoz.cool.apihub.service.StorageService;
@@ -58,8 +58,8 @@ public class FileController {
             throw new ApiException(HttpCode.VALIDATE_FAILED, "文件不能为空");
         }
         // 类型限制
-        if (FileType.getFileType(file.getContentType()) == null) {
-            throw new ApiException(HttpCode.VALIDATE_FAILED, "文件类型不支持，目前支持的文件类型有：" + Arrays.toString(FileType.getAllTypes()));
+        if (FileTypeEnum.getFileType(file.getContentType()) == null) {
+            throw new ApiException(HttpCode.VALIDATE_FAILED, "文件类型不支持，目前支持的文件类型有：" + Arrays.toString(FileTypeEnum.getAllTypes()));
         }
         //大小限制：单文件不能超过xx M
         if (!storageConfig.isFileSizeValid(file.getSize())) {

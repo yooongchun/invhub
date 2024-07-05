@@ -71,8 +71,8 @@ public class InvController {
             throw new ApiException(HttpCode.FORBIDDEN);
         }
         // 获取文件
-        FileType fileType = FileType.getFileType(fileInfo.getFileType());
-        if (fileType == null) {
+        FileTypeEnum fileTypeEnum = FileTypeEnum.getFileType(fileInfo.getFileType());
+        if (fileTypeEnum == null) {
             log.error("文件类型不存在：{}", fileInfo.getFileType());
             throw new ApiException(HttpCode.INTERNAL_ERROR);
         }
@@ -85,25 +85,25 @@ public class InvController {
         ApihubInvoiceInfo invoiceInfo = new ApihubInvoiceInfo();
         invoiceInfo.setFileId(fileInfo.getId());
         invoiceInfo.setUserId(user.getUid());
-        invoiceInfo.setStatus(InvStatus.PROCESSING.getCode());
-        invoiceInfo.setMethod(InvMethod.BAIDU.name());
+        invoiceInfo.setStatus(InvStatusEnum.PROCESSING.getCode());
+        invoiceInfo.setMethod(InvMethodEnum.BAIDU.name());
         apihubInvoiceInfoService.save(invoiceInfo);
 
         byte[] fileBytes = storageService.download(fileInfo.getObjectName());
         String base64String;
-        switch (fileType) {
+        switch (fileTypeEnum) {
             case IMAGE_BMP, IMAGE_JPEG, IMAGE_PNG, IMAGE_WEBP -> base64String = FileUtil.img2base64(fileBytes);
             case PDF -> base64String = FileUtil.img2base64(FileUtil.pdf2Image(fileBytes).getFirst());
             default -> throw new ApiException(HttpCode.VALIDATE_FAILED, "文件类型不支持");
         }
         BaiduOcrVo baiduOcrVo = baiduOcrDelegate.getOcrData(base64String);
         if (baiduOcrVo == null) {
-            invoiceInfo.setStatus(InvStatus.FAILED.getCode());
+            invoiceInfo.setStatus(InvStatusEnum.FAILED.getCode());
             apihubInvoiceInfoService.updateById(invoiceInfo);
             throw new ApiException(HttpCode.BUSINESS_FAILED, "解析失败");
         }
         // 成功，保存数据
-        invoiceInfo.setStatus(InvStatus.SUCCEED.getCode());
+        invoiceInfo.setStatus(InvStatusEnum.SUCCEED.getCode());
         invoiceInfo.setInvCode(baiduOcrVo.getInvoiceCode());
         invoiceInfo.setInvNum(baiduOcrVo.getInvoiceNum());
         invoiceInfo.setInvDate(TimeUtil.parseLocalDate(baiduOcrVo.getInvoiceDate()));
@@ -116,7 +116,7 @@ public class InvController {
         apihubInvoiceInfoService.updateById(invoiceInfo);
         // 扣费
         if (user.getAdmin() == 0) {
-            userService.deduceBalance(user, price);
+            userService.deduceBalance(user, price, ProductNameEnum.INV_PARSE);
         }
         return invoiceInfo;
     }

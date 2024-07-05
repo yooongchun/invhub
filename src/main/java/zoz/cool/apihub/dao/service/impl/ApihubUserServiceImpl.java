@@ -35,7 +35,7 @@ public class ApihubUserServiceImpl extends ServiceImpl<ApihubUserMapper, ApihubU
     public BigDecimal addBalance(Long uid, BigDecimal amount) {
         ApihubUser user = getUserByUid(uid);
         Assert.notNull(user, "用户不存在");
-
+        // 用户余额增加
         user.setBalance(user.getBalance().add(amount));
         updateById(user);
         return user.getBalance();

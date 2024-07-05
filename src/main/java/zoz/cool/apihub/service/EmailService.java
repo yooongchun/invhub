@@ -13,7 +13,9 @@ import zoz.cool.apihub.constant.EmailConstant;
 import zoz.cool.apihub.dao.domain.ApihubAlipayOrder;
 import zoz.cool.apihub.dao.domain.ApihubUser;
 import zoz.cool.apihub.dao.service.ApihubUserService;
+import zoz.cool.apihub.vo.ReportDataVo;
 
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 
@@ -38,21 +40,36 @@ public class EmailService {
     }
 
     public void notifyOrderPayment(ApihubAlipayOrder order) {
-        try {
-            // 获取管理员列表
-            List<String> admins = apihubUserService.getAdmins().stream().map(ApihubUser::getEmail).filter(StrUtil::isNotEmpty).toList();
-            log.info("用户订单支付成功，通知管理员: {}", admins);
-            if (CollUtil.isNotEmpty(admins)) {
-                //创建邮件正文
-                Context context = new Context();
-                context.setVariable("order", order);
-                context.setVariable("user", apihubUserService.getUserByUid(order.getUserId()));
-                //将模块引擎内容解析成html字符串
-                String emailContent = templateEngine.process(EmailConstant.ORDER_NOTIFY_EMAIL_TEMPLATE, context);
-                emailClient.sendHtmlMail(StrUtil.join(",", admins), EmailConstant.ORDER_SUBJECT, emailContent);
-            }
-        } catch (Exception e) {
-            log.error("发送邮件失败", e);
+        // 获取管理员列表
+        List<String> admins = apihubUserService.getAdmins().stream().map(ApihubUser::getEmail).filter(StrUtil::isNotEmpty).toList();
+        log.info("用户订单支付成功，通知管理员: {}", admins);
+        if (CollUtil.isNotEmpty(admins)) {
+            //创建邮件正文
+            Context context = new Context();
+            context.setVariable("order", order);
+            context.setVariable("user", apihubUserService.getUserByUid(order.getUserId()));
+            //将模块引擎内容解析成html字符串
+            String emailContent = templateEngine.process(EmailConstant.ORDER_NOTIFY_EMAIL_TEMPLATE, context);
+            emailClient.sendHtmlMail(StrUtil.join(",", admins), EmailConstant.ORDER_SUBJECT, emailContent);
+        }
+    }
+
+    public void sendDailyReport(ReportDataVo dayVo, ReportDataVo weekVo, ReportDataVo monthVo, ReportDataVo yearVo, ReportDataVo allVo) {
+        // 获取管理员列表
+        List<String> admins = apihubUserService.getAdmins().stream().map(ApihubUser::getEmail).filter(StrUtil::isNotEmpty).toList();
+        if (CollUtil.isNotEmpty(admins)) {
+            log.info("发送每日报表: {}", admins);
+            //创建邮件正文
+            Context context = new Context();
+            context.setVariable("dayReport", dayVo);
+            context.setVariable("weekReport", weekVo);
+            context.setVariable("monthReport", monthVo);
+            context.setVariable("yearReport", yearVo);
+            context.setVariable("allReport", allVo);
+
+            //将模块引擎内容解析成html字符串
+            String emailContent = templateEngine.process(EmailConstant.DAILY_REPORT_EMAIL_TEMPLATE, context);
+            emailClient.sendHtmlMail(StrUtil.join(",", admins), String.format(EmailConstant.DAILY_REPORT_SUBJECT, LocalDate.now().minusDays(1)), emailContent);
         }
     }
 }

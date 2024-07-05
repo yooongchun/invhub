@@ -3,7 +3,7 @@ package zoz.cool.apihub.enums;
 import lombok.Getter;
 
 @Getter
-public enum InvStatus {
+public enum InvStatusEnum {
     INIT(0, "初始化"),
     PROCESSING(1, "处理中"),
     SUCCEED(2, "成功"),
@@ -12,7 +12,7 @@ public enum InvStatus {
     private Integer code;
     private String name;
 
-    InvStatus(Integer code, String name) {
+    InvStatusEnum(Integer code, String name) {
         this.code = code;
         this.name = name;
     }

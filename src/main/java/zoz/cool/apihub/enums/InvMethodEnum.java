@@ -1,6 +1,6 @@
 package zoz.cool.apihub.enums;
 
-public enum InvMethod {
+public enum InvMethodEnum {
     BAIDU,
     MANUAL;
 }

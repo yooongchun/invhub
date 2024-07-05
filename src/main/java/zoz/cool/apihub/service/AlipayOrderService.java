@@ -26,7 +26,7 @@ import zoz.cool.apihub.config.AlipayConfig;
 import zoz.cool.apihub.dao.domain.ApihubAlipayOrder;
 import zoz.cool.apihub.dao.service.ApihubAlipayOrderService;
 import zoz.cool.apihub.dao.service.ApihubUserService;
-import zoz.cool.apihub.enums.AlipayOrderStatus;
+import zoz.cool.apihub.enums.AlipayOrderStatusEnum;
 import zoz.cool.apihub.exception.ApiException;
 import zoz.cool.apihub.utils.TimeUtil;
 import zoz.cool.apihub.utils.ToolKit;
@@ -110,7 +110,7 @@ public class AlipayOrderService {
         // 创建成功， 返回订单对象
         ApihubAlipayOrder alipayOrder = new ApihubAlipayOrder();
         BeanUtils.copyProperties(alipayOrderVo, alipayOrder);
-        alipayOrder.setTradeStatus(AlipayOrderStatus.WAIT_BUYER_PAY.name());
+        alipayOrder.setTradeStatus(AlipayOrderStatusEnum.WAIT_BUYER_PAY.name());
         alipayOrder.setQrCode(node.get("qr_code").asText());
         alipayOrder.setUserId(StpUtil.getLoginIdAsLong());
         alipayOrder.setTradeNo(node.get("out_trade_no").asText());
@@ -135,7 +135,7 @@ public class AlipayOrderService {
     public boolean updateOrder(String outTradeNo) {
         ApihubAlipayOrder order = apihubAlipayOrderService.getByOrderId(outTradeNo);
         Assert.notNull(order, "订单不存在 " + outTradeNo);
-        AlipayOrderStatus prevTradeStatus = AlipayOrderStatus.getOrderStatusByName(order.getTradeStatus());
+        AlipayOrderStatusEnum prevTradeStatus = AlipayOrderStatusEnum.getOrderStatusByName(order.getTradeStatus());
         // 查询状态
         AlipayTradeQueryResponse trade = queryOrder(outTradeNo);
         if (trade == null) {
@@ -147,7 +147,7 @@ public class AlipayOrderService {
             log.warn("[AlipayOrder.updateOrder] 等待用户扫码, response.body: {}", trade.getBody());
             return false;
         }
-        AlipayOrderStatus currStatus = AlipayOrderStatus.getOrderStatusByName(trade.getTradeStatus());
+        AlipayOrderStatusEnum currStatus = AlipayOrderStatusEnum.getOrderStatusByName(trade.getTradeStatus());
         log.info("[AlipayOrder.updateOrder] 当前订单状态: {}", currStatus);
         switch (currStatus) {
             case TRADE_CLOSED, TRADE_FINISHED, TRADE_SUCCESS -> {
@@ -157,7 +157,7 @@ public class AlipayOrderService {
                 order.setTradeNo(trade.getTradeNo());
                 order.setGmtPayment(TimeUtil.dateToLocalDateTime(trade.getSendPayDate()));
                 apihubAlipayOrderService.updateById(order);
-                if (currStatus.equals(AlipayOrderStatus.TRADE_SUCCESS)) {
+                if (currStatus.equals(AlipayOrderStatusEnum.TRADE_SUCCESS)) {
                     // 交易成功，则需要更新账户余额
                     BigDecimal balance = accountService.addBalance(order.getUserId(), order.getAmount());
                     emailService.notifyOrderPayment(order);
@@ -183,7 +183,7 @@ public class AlipayOrderService {
         executorService.scheduleAtFixedRate(() -> {
             if (LocalDateTime.now().isAfter(expireTime)) { //如已超时，则退出
                 ApihubAlipayOrder order = apihubAlipayOrderService.getByOrderId(outTradeNo);
-                order.setTradeStatus(AlipayOrderStatus.TRADE_CLOSED.name());
+                order.setTradeStatus(AlipayOrderStatusEnum.TRADE_CLOSED.name());
                 apihubAlipayOrderService.updateById(order);
                 executorService.shutdown();
             }
