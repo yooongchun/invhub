@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import zoz.cool.apihub.dao.domain.ApihubUser;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 /**
  * @author yczha
@@ -16,4 +17,6 @@ public interface ApihubUserService extends IService<ApihubUser> {
     ApihubUser getUserByUid(Long uid);
 
     BigDecimal addBalance(Long uid, BigDecimal amount);
+
+    List<ApihubUser> getAdmins();
 }

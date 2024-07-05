@@ -13,7 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import zoz.cool.apihub.config.SmsConfig;
-import zoz.cool.apihub.constant.EmailConstant;
 
 /**
  * 短信发送
@@ -53,10 +52,6 @@ public class SmsClient {
         }
     }
 
-    public void sendSmsVerifyCode(String phoneNumbers, String code) {
-        String templateParams = String.format(EmailConstant.TEMPLATE_PARAMS, code);
-        sendSms(phoneNumbers, templateParams);
-    }
 
     private SendSmsResponse getSendSmsResponse(String phoneNumbers, String templateParam, IClientProfile profile) throws ClientException {
         IAcsClient acsClient = new DefaultAcsClient(profile);

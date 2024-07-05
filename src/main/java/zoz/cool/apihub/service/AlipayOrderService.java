@@ -3,6 +3,7 @@ package zoz.cool.apihub.service;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSONObject;
 import com.alipay.api.AlipayApiException;
 import com.alipay.api.AlipayClient;
@@ -49,6 +50,8 @@ public class AlipayOrderService {
     private AlipayConfig alipayConfig;
     @Resource
     private ApihubUserService accountService;
+    @Resource
+    private EmailService emailService;
 
     static {
         mapper = Jackson2ObjectMapperBuilder.json().simpleDateFormat("yyyy-MM-dd HH:mm:ss")
@@ -57,6 +60,7 @@ public class AlipayOrderService {
                 .featuresToEnable(JsonReadFeature.ALLOW_UNESCAPED_CONTROL_CHARS.mappedFeature())
                 .build();
     }
+
 
     public ApihubAlipayOrder createOrder(AlipayOrderVo alipayOrderVo) {
         // 调用支付宝创建订单
@@ -81,7 +85,7 @@ public class AlipayOrderService {
         }
         // ******必传参数******
         JSONObject bizContent = getBizContent(alipayOrderVo);
-        request.setBizContent(bizContent.toString());
+        request.setBizContent(JSONUtil.toJsonStr(bizContent));
         String result;
         String tip = "请求支付宝创建订单失败";
         try {
@@ -156,6 +160,7 @@ public class AlipayOrderService {
                 if (currStatus.equals(AlipayOrderStatus.TRADE_SUCCESS)) {
                     // 交易成功，则需要更新账户余额
                     BigDecimal balance = accountService.addBalance(order.getUserId(), order.getAmount());
+                    emailService.notifyOrderPayment(order);
                     log.info("[AlipayOrder.updateOrder] 交易成功，更新账户，amount: {}, after: {}", order.getAmount(), balance);
                 }
                 log.info("[AlipayOrder.updateOrder] 交易完成，currStatus: {}", currStatus);
@@ -199,7 +204,7 @@ public class AlipayOrderService {
         String[] queryOptions = {"trade_settle_info"};
         bizContent.put("query_options", queryOptions);
 
-        request.setBizContent(bizContent.toString());
+        request.setBizContent(JSONUtil.toJsonStr(bizContent));
         try {
             return alipayClient.execute(request);
         } catch (AlipayApiException e) {

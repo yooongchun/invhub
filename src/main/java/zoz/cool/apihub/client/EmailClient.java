@@ -10,33 +10,16 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.thymeleaf.TemplateEngine;
-import org.thymeleaf.context.Context;
 import zoz.cool.apihub.config.EmailConfig;
-import zoz.cool.apihub.constant.CommonConstant;
-import zoz.cool.apihub.constant.EmailConstant;
-
-import java.util.Arrays;
 
 @Slf4j
 @Service
 public class EmailClient {
     @Resource
     private JavaMailSender mailSender;
-    @Resource
-    private TemplateEngine templateEngine;
+
     @Resource
     private EmailConfig emailConfig;
-
-    public void sendMailVerifyCode(String to, String code) {
-        //创建邮件正文
-        Context context = new Context();
-        context.setVariable("expiredTime", CommonConstant.VERIFY_CODE_EXPIRED_TIME / 60);
-        context.setVariable("verifyCode", Arrays.asList(code.split("")));
-        //将模块引擎内容解析成html字符串
-        String emailContent = templateEngine.process(EmailConstant.TEMPLATE_FILENAME, context);
-        sendHtmlMail(to, EmailConstant.SUBJECT, emailContent);
-    }
 
     /**
      * 简单文本邮件

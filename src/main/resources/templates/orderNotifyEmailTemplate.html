@@ -1,0 +1,26 @@
+<table width="100%" border="1" cellspacing="1" cellpadding="4" bgcolor="#AFEEEE" class="tabtop13" align="center"
+       style="color: #FF7F50; font-weight: bold;">
+    <tr>
+        <th colspan="2">用户订单信息</th>
+    </tr>
+    <tr style="color:#00BFFF">
+        <td>订 单 号</td>
+        <td th:text="${order.orderId}"></td>
+    </tr>
+    <tr style="color:#00BFFF">
+        <td>订单备注</td>
+        <td th:text="${order.subject}"></td>
+    </tr>
+    <tr style="color:#00BFFF">
+        <td>用 户 名</td>
+        <td th:text="${user.username}"></td>
+    </tr>
+    <tr style="color:#00BFFF">
+        <td>时间</td>
+        <td th:text="${order.gmtPayment}"></td>
+    </tr>
+    <tr style="color:#00BFFF">
+        <td>金额</td>
+        <td th:text="${order.amount}"></td>
+    </tr>
+</table>

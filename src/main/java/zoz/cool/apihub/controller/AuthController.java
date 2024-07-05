@@ -16,14 +16,14 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
-import zoz.cool.apihub.client.EmailClient;
 import zoz.cool.apihub.client.RedisClient;
-import zoz.cool.apihub.client.SmsClient;
 import zoz.cool.apihub.constant.CommonConstant;
 import zoz.cool.apihub.dao.domain.ApihubUser;
 import zoz.cool.apihub.dao.service.ApihubUserService;
 import zoz.cool.apihub.enums.HttpCode;
 import zoz.cool.apihub.exception.ApiException;
+import zoz.cool.apihub.service.EmailService;
+import zoz.cool.apihub.service.SmsService;
 import zoz.cool.apihub.service.UserService;
 import zoz.cool.apihub.utils.ToolKit;
 import zoz.cool.apihub.vo.CaptchaVo;
@@ -45,9 +45,9 @@ public class AuthController {
     @Resource
     private RedisClient redisClient;
     @Resource
-    private EmailClient emailClient;
+    private EmailService emailService;
     @Resource
-    private SmsClient smsClient;
+    private SmsService smsService;
     @Resource
     private ApihubUserService apihubUserService;
     @Resource
@@ -123,10 +123,10 @@ public class AuthController {
         String verifyCodeKey = CommonConstant.VERIFY_CODE_KEY_PREFIX + key;
         redisClient.set(verifyCodeKey, verCode, CommonConstant.VERIFY_CODE_EXPIRED_TIME);
         if (StrUtil.isNotEmpty(verifyCodeVo.getEmail())) {
-            emailClient.sendMailVerifyCode(verifyCodeVo.getEmail(), verCode);
+            emailService.sendMailVerifyCode(verifyCodeVo.getEmail(), verCode);
             return "邮件已发送到您的邮箱，请查收！";
         } else {
-            smsClient.sendSmsVerifyCode(verifyCodeVo.getPhone(), verCode);
+            smsService.sendSmsVerifyCode(verifyCodeVo.getPhone(), verCode);
             return "短信已发送到您的手机，请查收！";
         }
     }

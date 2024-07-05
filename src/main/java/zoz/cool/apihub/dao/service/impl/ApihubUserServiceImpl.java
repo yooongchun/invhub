@@ -9,6 +9,7 @@ import zoz.cool.apihub.dao.mapper.ApihubUserMapper;
 import zoz.cool.apihub.dao.service.ApihubUserService;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 /**
  * @author yczha
@@ -38,6 +39,10 @@ public class ApihubUserServiceImpl extends ServiceImpl<ApihubUserMapper, ApihubU
         user.setBalance(user.getBalance().add(amount));
         updateById(user);
         return user.getBalance();
+    }
+
+    public List<ApihubUser> getAdmins() {
+        return list(new QueryWrapper<ApihubUser>().eq("admin", 1));
     }
 }
 
