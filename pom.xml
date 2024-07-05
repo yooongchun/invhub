@@ -57,11 +57,11 @@
             <artifactId>lombok</artifactId>
             <optional>true</optional>
         </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.springframework.boot</groupId>-->
+<!--            <artifactId>spring-boot-starter-test</artifactId>-->
+<!--            <scope>test</scope>-->
+<!--        </dependency>-->
 
         <!--   文件数据库     -->
         <dependency>
@@ -183,7 +183,11 @@
             <artifactId>pdfbox</artifactId>
             <version>2.0.24</version>
         </dependency>
-
+        <!--        监控-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
@@ -199,6 +203,13 @@
                         </exclude>
                     </excludes>
                 </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.springframework.boot.experimental</groupId>
+                        <artifactId>spring-boot-thin-layout</artifactId>
+                        <version>1.0.31.RELEASE</version>
+                    </dependency>
+                </dependencies>
             </plugin>
         </plugins>
     </build>

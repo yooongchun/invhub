@@ -39,8 +39,16 @@ spring:
     templateCode: ${APIHUB_ALIYUN_SMS_TEMPLATE_CODE}
 
 server:
+  port: 9998
   servlet:
     context-path: /api/v2
+
+# 监控项配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: info, health, metrics
 
 # Sa-Token配置
 sa-token: # token名称 (同时也是cookie名称)/
