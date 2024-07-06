@@ -63,12 +63,19 @@ stages:
             artifactName: output
             artifactVersion: latest
         script:
-          - PACKAGE_NAME="api-hub-1.0.0-SNAPSHOT.jar"
+          - APP_NAME="api-hub-1.0.0-SNAPSHOT.jar"
+          - PACKAGE_NAME="output.tar.gz"
+          - TARGET_NAME="target"
+          - WORKDIR="/home/www/apihub"
           - ''
-          - cd /home/www/apihub
-          - rm -rf ${PACKAGE_NAME} && tar zxvf output.tar.gz
+          - cd ${WORKDIR}
+          - rm -rf ${APP_NAME} ${TARGET_NAME}
+          - tar xf ${PACKAGE_NAME}
+          - mv ${PACKAGE_NAME}/${APP_NAME} ./
+          - rm -rf ${PACKAGE_NAME} ${APP_NAME}
+          - ''
           - supervisorctl restart apihub
-          - echo 'deploy apihub down!'
+          - echo 'deploy apihub done!'
         notify:
           - certificate: ecdb7a60-fc4b-013b-13a4-4ea0de495936
             events:
