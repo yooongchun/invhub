@@ -71,8 +71,8 @@ stages:
           - cd ${WORKDIR}
           - rm -rf ${APP_NAME} ${TARGET_NAME}
           - tar xf ${PACKAGE_NAME}
-          - mv ${PACKAGE_NAME}/${APP_NAME} ./
-          - rm -rf ${PACKAGE_NAME} ${APP_NAME}
+          - mv ${TARGET_NAME}/${APP_NAME} ./
+          - rm -rf ${PACKAGE_NAME} ${TARGET_NAME}
           - ''
           - supervisorctl restart apihub
           - echo 'deploy apihub done!'
