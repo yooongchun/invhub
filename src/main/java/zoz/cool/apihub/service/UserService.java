@@ -54,6 +54,10 @@ public class UserService {
         return user;
     }
 
+    public boolean isAdmin() {
+        return getLoginUser().getAdmin() == 1;
+    }
+
     @Transactional
     public void deduceBalance(ApihubUser user, BigDecimal amount, ProductNameEnum transactionType) {
         if (user.getBalance().compareTo(amount) < 0) {

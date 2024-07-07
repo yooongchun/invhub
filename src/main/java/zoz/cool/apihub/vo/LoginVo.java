@@ -25,4 +25,10 @@ public class LoginVo {
     @Pattern(regexp = "^1[3-9]\\d{9}$", message = "手机号格式不正确")
     @Schema(description = "手机号")
     private String phone;
+
+    @Schema(description = "验证码key")
+    private String captchaKey;
+
+    @Schema(description = "图形验证码")
+    private String captchaCode;
 }

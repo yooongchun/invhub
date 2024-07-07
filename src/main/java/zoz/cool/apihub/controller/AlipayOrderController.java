@@ -24,7 +24,7 @@ import java.util.Objects;
 @Slf4j
 @RestController
 @ResponseBody
-@Tag(name = "AlipayOrderController", description = "支付宝订单管理")
+@Tag(name = "04.订单管理", description = "支付宝订单管理")
 @RequestMapping("/alipay/order")
 @SaCheckLogin
 public class AlipayOrderController {

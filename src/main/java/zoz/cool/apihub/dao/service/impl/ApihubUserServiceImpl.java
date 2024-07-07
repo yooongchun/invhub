@@ -2,6 +2,7 @@ package zoz.cool.apihub.dao.service.impl;
 
 import cn.hutool.core.lang.Assert;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
 import zoz.cool.apihub.dao.domain.ApihubUser;
@@ -43,6 +44,11 @@ public class ApihubUserServiceImpl extends ServiceImpl<ApihubUserMapper, ApihubU
 
     public List<ApihubUser> getAdmins() {
         return list(new QueryWrapper<ApihubUser>().eq("admin", 1));
+    }
+
+    public Page<ApihubUser> listUser(Integer page, Integer size) {
+        Page<ApihubUser> pageVo = new Page<>(page, size);
+        return baseMapper.selectPage(pageVo, null);
     }
 }
 

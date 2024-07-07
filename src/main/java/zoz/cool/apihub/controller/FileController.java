@@ -38,7 +38,7 @@ import java.util.Objects;
 @RestController
 @ResponseBody
 @RequestMapping("/file")
-@Tag(name = "FileController", description = "文件管理")
+@Tag(name = "03.文件管理")
 public class FileController {
     @Resource
     private StorageService storageService;

@@ -1,5 +1,6 @@
 package zoz.cool.apihub.dao.service;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import zoz.cool.apihub.dao.domain.ApihubUser;
 
@@ -19,4 +20,6 @@ public interface ApihubUserService extends IService<ApihubUser> {
     BigDecimal addBalance(Long uid, BigDecimal amount);
 
     List<ApihubUser> getAdmins();
+
+    Page<ApihubUser> listUser(Integer page, Integer size);
 }

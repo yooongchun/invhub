@@ -36,7 +36,7 @@ import java.util.Objects;
 @RestController
 @ResponseBody
 @SaCheckLogin
-@Tag(name = "InvController", description = "发票管理")
+@Tag(name = "05.发票管理")
 @RequestMapping("/inv")
 @Slf4j
 public class InvController {
