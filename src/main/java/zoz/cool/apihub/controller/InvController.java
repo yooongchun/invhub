@@ -11,7 +11,10 @@ import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
-import zoz.cool.apihub.dao.domain.*;
+import zoz.cool.apihub.dao.domain.ApihubFileInfo;
+import zoz.cool.apihub.dao.domain.ApihubInvoiceInfo;
+import zoz.cool.apihub.dao.domain.ApihubProductPrice;
+import zoz.cool.apihub.dao.domain.ApihubUser;
 import zoz.cool.apihub.dao.service.ApihubFileInfoService;
 import zoz.cool.apihub.dao.service.ApihubInvoiceInfoService;
 import zoz.cool.apihub.dao.service.ApihubProductPriceService;
@@ -67,7 +70,7 @@ public class InvController {
 
         ApihubUser user = userService.getLoginUser();
         // 校验权限
-        if (!Objects.equals(user.getUid(), fileInfo.getUserId()) && user.getAdmin() == 0) {
+        if (!Objects.equals(user.getUid(), fileInfo.getUserId()) && !userService.isAdmin()) {
             throw new ApiException(HttpCode.FORBIDDEN);
         }
         // 获取文件
@@ -79,7 +82,7 @@ public class InvController {
 
         // 计算费用
         BigDecimal price = getInvParsePrice();
-        if (user.getAdmin() == 0 && user.getBalance().compareTo(price) < 0) {
+        if (!userService.isAdmin() && user.getBalance().compareTo(price) < 0) {
             throw new ApiException(HttpCode.BUSINESS_FAILED, "余额不足");
         }
         ApihubInvoiceInfo invoiceInfo = new ApihubInvoiceInfo();
@@ -115,7 +118,7 @@ public class InvController {
         invoiceInfo.setInvDetail(JSONUtil.toJsonStr(baiduOcrVo));
         apihubInvoiceInfoService.updateById(invoiceInfo);
         // 扣费
-        if (user.getAdmin() == 0) {
+        if (!userService.isAdmin()) {
             userService.deduceBalance(user, price, ProductNameEnum.INV_PARSE);
         }
         return invoiceInfo;
@@ -130,7 +133,7 @@ public class InvController {
         }
         ApihubUser user = userService.getLoginUser();
         // 校验权限
-        if (!Objects.equals(user.getUid(), invoiceInfo.getUserId()) && user.getAdmin() == 0) {
+        if (!Objects.equals(user.getUid(), invoiceInfo.getUserId()) && !userService.isAdmin()) {
             throw new ApiException(HttpCode.FORBIDDEN);
         }
         InvInfoVo invInfoVo = new InvInfoVo();
@@ -148,7 +151,7 @@ public class InvController {
         }
         ApihubUser user = userService.getLoginUser();
         // 校验权限
-        if (!Objects.equals(user.getUid(), invoiceInfo.getUserId()) && user.getAdmin() == 0) {
+        if (!Objects.equals(user.getUid(), invoiceInfo.getUserId()) && !userService.isAdmin()) {
             throw new ApiException(HttpCode.FORBIDDEN);
         }
         InvInfoVo invInfoVo = new InvInfoVo();
@@ -159,8 +162,7 @@ public class InvController {
 
     @Operation(summary = "按用户查发票信息", description = "按用户查询发票信息")
     @GetMapping("/list")
-    public Page<InvInfoVo> invList(@RequestParam(required = false, defaultValue = "1") Integer page,
-                                   @RequestParam(required = false, defaultValue = "10") Integer pageSize) {
+    public Page<InvInfoVo> invList(@RequestParam(required = false, defaultValue = "1") Integer page, @RequestParam(required = false, defaultValue = "10") Integer pageSize) {
         Page<ApihubInvoiceInfo> rawData = apihubInvoiceInfoService.listByUserId(StpUtil.getLoginIdAsLong(), page, pageSize);
         Page<InvInfoVo> pageData = new Page<>(page, pageSize);
         List<InvInfoVo> newRecords = new ArrayList<>();

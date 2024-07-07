@@ -103,7 +103,7 @@ public class FileController {
         Assert.notNull(fileInfo, "文件不存在");
         // 校验是否有权限
         ApihubUser user = userService.getLoginUser();
-        if (!Objects.equals(user.getUid(), fileInfo.getUserId()) && user.getAdmin() == 0) {
+        if (!Objects.equals(user.getUid(), fileInfo.getUserId()) && !userService.isAdmin()) {
             throw new ApiException(HttpCode.FORBIDDEN);
         }
         // 下载

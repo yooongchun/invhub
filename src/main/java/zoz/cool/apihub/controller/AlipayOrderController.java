@@ -48,7 +48,7 @@ public class AlipayOrderController {
         ApihubAlipayOrder order = apihubAlipayOrderService.getByOrderId(orderId);
         Assert.notNull(order, "订单不存在");
         ApihubUser user = userService.getLoginUser();
-        if (!Objects.equals(user.getUid(), order.getUserId()) && user.getAdmin() == 0) {
+        if (!Objects.equals(user.getUid(), order.getUserId()) && !userService.isAdmin()) {
             throw new ApiException(HttpCode.FORBIDDEN);
         }
         return order;
