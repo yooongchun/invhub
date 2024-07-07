@@ -3,17 +3,23 @@ package zoz.cool.apihub.controller;
 import cn.dev33.satoken.annotation.SaCheckLogin;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.lang.Assert;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 import zoz.cool.apihub.dao.domain.ApihubUser;
 import zoz.cool.apihub.dao.service.ApihubUserService;
 import zoz.cool.apihub.enums.HttpCode;
 import zoz.cool.apihub.exception.ApiException;
 import zoz.cool.apihub.service.UserService;
+import zoz.cool.apihub.utils.ToolKit;
+import zoz.cool.apihub.vo.ChangePasswordVo;
+
+import java.time.LocalDate;
 
 /**
  * 用户管理
@@ -33,12 +39,86 @@ public class UserController {
     @Operation(summary = "用户信息", description = "获取用户信息")
     @GetMapping({"/info", "/"})
     public ApihubUser userInfo() {
-        Long userId = StpUtil.getLoginIdAsLong();
-        Assert.notNull(userId, "获取用户信息失败，请重新登录！");
-        ApihubUser user = apihubUserService.getUserByUid(userId);
+        ApihubUser user = userService.getLoginUser();
         Assert.notNull(user, "获取用户信息失败，请联系管理员！");
         user.setPassword(null);
         return user;
+    }
+
+    @Operation(summary = "获取指定用户信息")
+    @GetMapping("/{id}")
+    public ApihubUser userInfoById(@PathVariable Long id) {
+        checkAdmin();
+        ApihubUser user = apihubUserService.getById(id);
+        Assert.notNull(user, "获取用户信息失败，请联系管理员！");
+        return user;
+    }
+
+    @Operation(summary = "修改用户信息")
+    @PutMapping("/")
+    public void updateUser(@RequestBody ApihubUser userVo) {
+        checkAdmin();
+        ApihubUser user = apihubUserService.getById(userVo.getId());
+        Assert.notNull(user, "获取用户信息失败，请联系管理员！");
+        BeanUtils.copyProperties(userVo, user, "password");
+        apihubUserService.updateById(user);
+    }
+
+    @Operation(summary = "修改用户密码")
+    @PatchMapping("/{id}/change-password")
+    public void changePassword(@PathVariable Long id, ChangePasswordVo changePasswordVo) {
+        checkAdmin();
+        ApihubUser user = apihubUserService.getById(id);
+        Assert.notNull(user, "获取用户信息失败，请联系管理员！");
+        user.setPassword(ToolKit.getEncryptPassword(changePasswordVo.getNewPassword()));
+        apihubUserService.updateById(user);
+    }
+
+    @Operation(summary = "删除用户(标记删除)")
+    @DeleteMapping("/{ids}")
+    public void deleteUser(@PathVariable String ids) {
+        checkAdmin();
+        String[] idList = ids.split(",");
+        for (String id : idList) {
+            ApihubUser user = apihubUserService.getById(Long.parseLong(id));
+            Assert.notNull(user, "获取用户信息失败，请联系管理员！");
+            user.setDeleted(1);
+            apihubUserService.updateById(user);
+        }
+    }
+
+    @Operation(summary = "解禁用户")
+    @PatchMapping("/{id}/enable")
+    public void enableUser(@PathVariable Long id) {
+        checkAdmin();
+        ApihubUser user = apihubUserService.getById(id);
+        Assert.notNull(user, "获取用户信息失败，请联系管理员！");
+        user.setDeleted(0);
+        apihubUserService.updateById(user);
+    }
+
+    @Operation(summary = "新增用户")
+    @PostMapping("/")
+    public void addUser(@RequestBody ApihubUser userVo) {
+        checkAdmin();
+        String userKey = userVo.getUsername();
+        String email = userVo.getEmail();
+        String phone = userVo.getPhone();
+        if (StrUtil.isNotEmpty(userKey) && apihubUserService.getUser(userKey) != null) {
+            throw new ApiException("该用户名已存在");
+        }
+        if (StrUtil.isNotEmpty(email) && apihubUserService.getUser(email) != null) {
+            throw new ApiException("该邮箱已注册");
+        }
+        if (StrUtil.isNotEmpty(phone) && apihubUserService.getUser(phone) != null) {
+            throw new ApiException("该手机号已注册");
+        }
+        if (StrUtil.isEmpty(userVo.getPassword())) {
+            userVo.setPassword("apihub");
+        }
+        userVo.setPassword(ToolKit.getEncryptPassword(userVo.getPassword()));
+        userVo.setUid(ToolKit.getUid());
+        apihubUserService.save(userVo);
     }
 
     @Operation(summary = "退出登录", description = "退出登录")
@@ -49,10 +129,14 @@ public class UserController {
 
     @Operation(summary = "用户列表", description = "获取用户列表")
     @GetMapping("/list")
-    public Page<ApihubUser> listUser(@RequestParam(defaultValue = "1") Integer page, @RequestParam(defaultValue = "10") Integer size) {
+    public Page<ApihubUser> listUser(@RequestParam(defaultValue = "1") Integer pageNum, @RequestParam(defaultValue = "10") Integer pageSize, @RequestParam(required = false, name = "keywords") String kewWords, @RequestParam(required = false, name = "deleted") Integer deleted, @RequestParam(required = false) LocalDate startTime, @RequestParam(required = false) LocalDate endTime) {
+        checkAdmin();
+        return apihubUserService.listUser(pageNum, pageSize, kewWords, deleted, startTime, endTime);
+    }
+
+    private void checkAdmin() {
         if (!userService.isAdmin()) {
             throw new ApiException(HttpCode.FORBIDDEN, "需管理员身份");
         }
-        return apihubUserService.listUser(page, size);
     }
 }

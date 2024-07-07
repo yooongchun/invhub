@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import zoz.cool.apihub.dao.domain.ApihubUser;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -21,5 +22,5 @@ public interface ApihubUserService extends IService<ApihubUser> {
 
     List<ApihubUser> getAdmins();
 
-    Page<ApihubUser> listUser(Integer page, Integer size);
+    Page<ApihubUser> listUser(Integer page, Integer size, String key, Integer deleted, LocalDate startTime, LocalDate endTime);
 }
