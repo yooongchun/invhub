@@ -33,7 +33,7 @@ public class ApihubUser implements Serializable {
     private String username;
 
     /**
-     * 是否是管理员
+     * 是否是管理员：0->否；1->是
      */
     private Integer admin;
 
@@ -60,7 +60,7 @@ public class ApihubUser implements Serializable {
     /**
      * 头像
      */
-    private String icon;
+    private String avatar;
 
     /**
      * 备注信息

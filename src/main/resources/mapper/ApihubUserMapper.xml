@@ -13,7 +13,7 @@
             <result property="password" column="password" jdbcType="VARCHAR"/>
             <result property="phone" column="phone" jdbcType="VARCHAR"/>
             <result property="email" column="email" jdbcType="VARCHAR"/>
-            <result property="icon" column="icon" jdbcType="VARCHAR"/>
+            <result property="avatar" column="avatar" jdbcType="VARCHAR"/>
             <result property="remark" column="remark" jdbcType="VARCHAR"/>
             <result property="deleted" column="deleted" jdbcType="TINYINT"/>
             <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
@@ -23,7 +23,7 @@
     <sql id="Base_Column_List">
         id,uid,username,
         admin,balance,password,
-        phone,email,icon,
+        phone,email,avatar,
         remark,deleted,create_time,
         update_time
     </sql>
