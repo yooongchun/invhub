@@ -58,6 +58,12 @@ public class UserService {
         return getLoginUser().getAdmin() == 1;
     }
 
+    public void checkAdmin() {
+        if (!isAdmin()) {
+            throw new ApiException(HttpCode.FORBIDDEN, "需管理员身份");
+        }
+    }
+
     @Transactional
     public void deduceBalance(ApihubUser user, BigDecimal amount, ProductNameEnum transactionType) {
         if (user.getBalance().compareTo(amount) < 0) {

@@ -48,7 +48,7 @@ public class UserController {
     @Operation(summary = "获取指定用户信息")
     @GetMapping("/{id}")
     public ApihubUser userInfoById(@PathVariable Long id) {
-        checkAdmin();
+        userService.checkAdmin();
         ApihubUser user = apihubUserService.getById(id);
         Assert.notNull(user, "获取用户信息失败，请联系管理员！");
         return user;
@@ -57,7 +57,7 @@ public class UserController {
     @Operation(summary = "修改用户信息")
     @PutMapping("/")
     public void updateUser(@RequestBody ApihubUser userVo) {
-        checkAdmin();
+        userService.checkAdmin();
         ApihubUser user = apihubUserService.getById(userVo.getId());
         Assert.notNull(user, "获取用户信息失败，请联系管理员！");
         BeanUtils.copyProperties(userVo, user, "password");
@@ -67,7 +67,7 @@ public class UserController {
     @Operation(summary = "修改用户密码")
     @PatchMapping("/{id}/change-password")
     public void changePassword(@PathVariable Long id, ChangePasswordVo changePasswordVo) {
-        checkAdmin();
+        userService.checkAdmin();
         ApihubUser user = apihubUserService.getById(id);
         Assert.notNull(user, "获取用户信息失败，请联系管理员！");
         user.setPassword(ToolKit.getEncryptPassword(changePasswordVo.getNewPassword()));
@@ -77,7 +77,7 @@ public class UserController {
     @Operation(summary = "删除用户(标记删除)")
     @DeleteMapping("/{ids}")
     public void deleteUser(@PathVariable String ids) {
-        checkAdmin();
+        userService.checkAdmin();
         String[] idList = ids.split(",");
         for (String id : idList) {
             ApihubUser user = apihubUserService.getById(Long.parseLong(id));
@@ -90,7 +90,7 @@ public class UserController {
     @Operation(summary = "解禁用户")
     @PatchMapping("/{id}/enable")
     public void enableUser(@PathVariable Long id) {
-        checkAdmin();
+        userService.checkAdmin();
         ApihubUser user = apihubUserService.getById(id);
         Assert.notNull(user, "获取用户信息失败，请联系管理员！");
         user.setDeleted(0);
@@ -100,7 +100,7 @@ public class UserController {
     @Operation(summary = "新增用户")
     @PostMapping("/")
     public void addUser(@RequestBody ApihubUser userVo) {
-        checkAdmin();
+        userService.checkAdmin();
         String userKey = userVo.getUsername();
         String email = userVo.getEmail();
         String phone = userVo.getPhone();
@@ -130,13 +130,8 @@ public class UserController {
     @Operation(summary = "用户列表", description = "获取用户列表")
     @GetMapping("/list")
     public Page<ApihubUser> listUser(@RequestParam(defaultValue = "1") Integer pageNum, @RequestParam(defaultValue = "10") Integer pageSize, @RequestParam(required = false, name = "keywords") String kewWords, @RequestParam(required = false, name = "deleted") Integer deleted, @RequestParam(required = false) LocalDate startTime, @RequestParam(required = false) LocalDate endTime) {
-        checkAdmin();
+        userService.checkAdmin();
         return apihubUserService.listUser(pageNum, pageSize, kewWords, deleted, startTime, endTime);
     }
 
-    private void checkAdmin() {
-        if (!userService.isAdmin()) {
-            throw new ApiException(HttpCode.FORBIDDEN, "需管理员身份");
-        }
-    }
 }
