@@ -64,14 +64,13 @@ public class InvController {
             log.warn("文件不存在，fileId={}", fileId);
             throw new ApiException(HttpCode.VALIDATE_FAILED, "文件不存在");
         }
-        if (apihubInvoiceInfoService.getByFileId(fileId) != null) {
-            throw new ApiException(HttpCode.VALIDATE_FAILED, "该文件已存在解析结果");
-        }
-
         ApihubUser user = userService.getLoginUser();
         // 校验权限
         if (!Objects.equals(user.getUid(), fileInfo.getUserId()) && !userService.isAdmin()) {
             throw new ApiException(HttpCode.FORBIDDEN);
+        }
+        if (apihubInvoiceInfoService.getByFileId(fileId) != null) {
+            throw new ApiException(HttpCode.VALIDATE_FAILED, "该文件已存在解析结果");
         }
         // 获取文件
         FileTypeEnum fileTypeEnum = FileTypeEnum.getFileType(fileInfo.getFileType());

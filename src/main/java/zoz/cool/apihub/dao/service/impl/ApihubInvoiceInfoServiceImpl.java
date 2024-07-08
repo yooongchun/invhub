@@ -24,10 +24,6 @@ public class ApihubInvoiceInfoServiceImpl extends ServiceImpl<ApihubInvoiceInfoM
     }
 
     public ApihubInvoiceInfo getByFileId(Long fileId) {
-        return baseMapper.selectList(new QueryWrapper<ApihubInvoiceInfo>().eq("file_id", fileId)).getFirst();
+        return getOne(new QueryWrapper<ApihubInvoiceInfo>().eq("file_id", fileId));
     }
 }
-
-
-
-
