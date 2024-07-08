@@ -3,6 +3,7 @@ package zoz.cool.apihub.controller;
 import cn.dev33.satoken.annotation.SaCheckLogin;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.lang.Assert;
+import cn.hutool.core.util.StrUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
@@ -27,8 +28,7 @@ import zoz.cool.apihub.utils.ToolKit;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * 文件管理
@@ -73,11 +73,12 @@ public class FileController {
             throw new ApiException(HttpCode.INTERNAL_ERROR, "读取字节流失败");
         }
         String fileHash = ToolKit.calFileHash(new ByteArrayInputStream(fileBytes));
-        // 已存在则不能重复上传
-        if (apihubFileInfoService.getByFileHash(fileHash) != null) {
-            throw new ApiException(HttpCode.VALIDATE_FAILED, "文件已存在");
+        // 已存在则不重复上传
+        ApihubFileInfo fileInfo = apihubFileInfoService.getByFileHash(fileHash, StpUtil.getLoginIdAsLong());
+        if (fileInfo != null) {
+            return fileInfo;
         }
-        ApihubFileInfo fileInfo = new ApihubFileInfo();
+        fileInfo = new ApihubFileInfo();
         fileInfo.setUserId(StpUtil.getLoginIdAsLong());
         fileInfo.setFileName(file.getOriginalFilename());
         fileInfo.setFileHash(ToolKit.calFileHash(new ByteArrayInputStream(fileBytes)));
@@ -102,8 +103,7 @@ public class FileController {
         ApihubFileInfo fileInfo = apihubFileInfoService.getById(fileId);
         Assert.notNull(fileInfo, "文件不存在");
         // 校验是否有权限
-        ApihubUser user = userService.getLoginUser();
-        if (!Objects.equals(user.getUid(), fileInfo.getUserId()) && !userService.isAdmin()) {
+        if (fileInfo.getUserId() == StpUtil.getLoginIdAsLong() && !userService.isAdmin()) {
             throw new ApiException(HttpCode.FORBIDDEN);
         }
         // 下载

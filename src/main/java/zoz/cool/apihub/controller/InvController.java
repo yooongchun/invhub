@@ -29,9 +29,7 @@ import zoz.cool.apihub.vo.BaiduOcrVo;
 import zoz.cool.apihub.vo.InvInfoVo;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * 发票管理
@@ -66,7 +64,7 @@ public class InvController {
         }
         ApihubUser user = userService.getLoginUser();
         // 校验权限
-        if (!Objects.equals(user.getUid(), fileInfo.getUserId()) && !userService.isAdmin()) {
+        if (!Objects.equals(fileInfo.getUserId(), user.getUid()) && !userService.isAdmin()) {
             throw new ApiException(HttpCode.FORBIDDEN);
         }
         if (apihubInvoiceInfoService.getByFileId(fileId) != null) {
