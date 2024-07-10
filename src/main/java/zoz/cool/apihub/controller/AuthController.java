@@ -57,7 +57,7 @@ public class AuthController {
     @Operation(summary = "用户注册", description = "用户注册接口")
     @PostMapping("/register")
     @Transactional
-    public void register(@Validated @RequestBody RegisterVo registerVo) {
+    public LoginResVo register(@Validated @RequestBody RegisterVo registerVo) {
         ApihubUser apihubUser = new ApihubUser();
         BeanUtils.copyProperties(registerVo, apihubUser);
         // 用户名是否已存在
@@ -89,6 +89,12 @@ public class AuthController {
         apihubUser.setPassword(ToolKit.getEncryptPassword(registerVo.getPassword()));
         apihubUser.setUid(ToolKit.getUid());
         apihubUserService.save(apihubUser);
+
+        StpUtil.login(apihubUser.getUid());
+        // 获取当前登录用户Token信息
+        SaTokenInfo saTokenInfo = StpUtil.getTokenInfo();
+        userService.insertLoginLog(apihubUser, ((ServletRequestAttributes) Objects.requireNonNull(RequestContextHolder.getRequestAttributes())).getRequest());
+        return new LoginResVo(saTokenInfo.tokenValue, tokenName, saTokenInfo.tokenTimeout);
     }
 
     @Operation(summary = "图形验证码", description = "图形验证码接口")
@@ -119,8 +125,7 @@ public class AuthController {
         // 生成一个6位数的随机验证码
         String verCode = ToolKit.getRandomCode();
         // 存入redis并设置过期时间
-        String verifyCodeKey = CommonConstant.VERIFY_CODE_KEY_PREFIX + key;
-        setStoreCode(verifyCodeKey, verCode);
+        setStoreCode(key, verCode);
         if (StrUtil.isNotEmpty(verifyCodeVo.getEmail())) {
             emailService.sendMailVerifyCode(verifyCodeVo.getEmail(), verCode);
             return "邮件已发送到您的邮箱，请查收！";
@@ -200,6 +205,12 @@ public class AuthController {
         }
         user.setPassword(ToolKit.getEncryptPassword(changePasswordVo.getPassword()));
         apihubUserService.updateById(user);
+    }
+
+    @Operation(summary = "用户是否已存在")
+    @GetMapping("/user-exists")
+    public boolean userExists(@RequestParam String userKey) {
+        return apihubUserService.getUser(userKey) != null;
     }
 
     private String getStoreCode(String key) {
