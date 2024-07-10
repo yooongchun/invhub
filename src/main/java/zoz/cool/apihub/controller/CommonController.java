@@ -7,6 +7,7 @@ import cn.hutool.json.JSONUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -27,6 +28,7 @@ public class CommonController {
 
     @GetMapping("/daily-words")
     @Operation(summary = "每日一句")
+    @Cacheable(value = "daily-words", key = "'daily-words-'+ T(java.time.LocalDate).now().toString()")
     public DailyWordsVo handleDailyWords() {
         String res = HttpUtil.get(API_SHANBEI);
         log.info("每日一句接口返回：{}", res);

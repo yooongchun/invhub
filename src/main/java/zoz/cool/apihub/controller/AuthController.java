@@ -12,6 +12,7 @@ import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -209,6 +210,7 @@ public class AuthController {
 
     @Operation(summary = "用户是否已存在")
     @GetMapping("/user-exists")
+    @Cacheable(value = "userExists", key = "#userKey", unless = "#result == false")
     public boolean userExists(@RequestParam String userKey) {
         return apihubUserService.getUser(userKey) != null;
     }
