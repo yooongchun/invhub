@@ -29,6 +29,7 @@ import zoz.cool.apihub.vo.BaiduOcrVo;
 import zoz.cool.apihub.vo.InvInfoVo;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.*;
 
 /**
@@ -157,10 +158,19 @@ public class InvController {
         return invInfoVo;
     }
 
-    @Operation(summary = "按用户查发票信息", description = "按用户查询发票信息")
+    @Operation(summary = "发票列表")
     @GetMapping("/list")
-    public Page<InvInfoVo> invList(@RequestParam(required = false, defaultValue = "1") Integer page, @RequestParam(required = false, defaultValue = "10") Integer pageSize) {
-        Page<ApihubInvoiceInfo> rawData = apihubInvoiceInfoService.listByUserId(StpUtil.getLoginIdAsLong(), page, pageSize);
+    public Page<InvInfoVo> invList(@RequestParam(required = false, defaultValue = "1") Integer page,
+                                   @RequestParam(required = false, defaultValue = "10") Integer pageSize,
+                                   @RequestParam(required = false) String keywords,
+                                   @RequestParam(required = false) Integer status,
+                                   @RequestParam(required = false) Integer checked,
+                                   @RequestParam(required = false) Integer reimbursed,
+                                   @RequestParam(required = false) BigDecimal minAmount,
+                                   @RequestParam(required = false) BigDecimal maxAmount,
+                                   @RequestParam(required = false) LocalDate startTime,
+                                   @RequestParam(required = false) LocalDate endTime) {
+        Page<ApihubInvoiceInfo> rawData = apihubInvoiceInfoService.listByUserId(StpUtil.getLoginIdAsLong(), userService.isAdmin(), page, pageSize, status, checked, reimbursed, startTime, endTime, keywords, minAmount, maxAmount);
         Page<InvInfoVo> pageData = new Page<>(page, pageSize);
         List<InvInfoVo> newRecords = new ArrayList<>();
         for (ApihubInvoiceInfo info : rawData.getRecords()) {
