@@ -12,11 +12,11 @@ import lombok.Data;
 
 /**
  * 发票信息表
- * @TableName apihub_invoice_info
+ * @TableName apihub_inv_info
  */
-@TableName(value ="apihub_invoice_info")
+@TableName(value ="apihub_inv_info")
 @Data
-public class ApihubInvoiceInfo implements Serializable {
+public class ApihubInvInfo implements Serializable {
     /**
      * 主键
      */
@@ -34,9 +34,14 @@ public class ApihubInvoiceInfo implements Serializable {
     private Long fileId;
 
     /**
-     * 解析状态,0-->初始化，1-->处理中，2-->成功，-1-->失败
+     * 解析任务ID
      */
-    private Integer status;
+    private Long invDetailId;
+
+    /**
+     * 查验任务ID
+     */
+    private Long invCheckId;
 
     /**
      * 是否已人工校验,0-->否，1-->是
@@ -44,7 +49,7 @@ public class ApihubInvoiceInfo implements Serializable {
     private Integer checked;
 
     /**
-     * 是否已报销：0->未报销；1->已报销
+     * 是否已报销：0->未报销；1->已报销；2->在途；3->已驳回
      */
     private Integer reimbursed;
 
@@ -61,7 +66,7 @@ public class ApihubInvoiceInfo implements Serializable {
     /**
      * 校验码
      */
-    private String invChk;
+    private String checkCode;
 
     /**
      * 开票日期
@@ -71,30 +76,20 @@ public class ApihubInvoiceInfo implements Serializable {
     /**
      * 开具金额
      */
-    private BigDecimal invMoney;
+    private BigDecimal amount;
 
     /**
      * 税额
      */
-    private String invTax;
+    private String tax;
 
     /**
-     * 价税合计
-     */
-    private String invTotal;
-
-    /**
-     * 发票类型:增值税专用发票、增值税电子专用发票、增值税普通发票、增值税电子普通发票、增值税普通发票(卷票)、增值税电子普通发票(通行费)
+     * 发票类型:增值税专用发票:->01、增值税电子专用发票->02、增值税普通发票->03、增值税电子普通发票->04、增值税普通发票(卷票)->05、增值税电子普通发票(通行费)->06，未知->99
      */
     private String invType;
 
     /**
-     * 详细信息
-     */
-    private String invDetail;
-
-    /**
-     * 解析方式
+     * 途径：手动上传->manual，系统解析->auto
      */
     private String method;
 
