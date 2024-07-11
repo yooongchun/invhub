@@ -17,6 +17,7 @@ import zoz.cool.apihub.dao.service.ApihubFileInfoService;
 import zoz.cool.apihub.dao.service.ApihubInvDetailService;
 import zoz.cool.apihub.dao.service.ApihubInvInfoService;
 import zoz.cool.apihub.dao.service.ApihubProductPriceService;
+import zoz.cool.apihub.dao.service.impl.ApihubUserServiceImpl;
 import zoz.cool.apihub.delegate.BaiduOcrDelegate;
 import zoz.cool.apihub.enums.*;
 import zoz.cool.apihub.exception.ApiException;
@@ -26,10 +27,13 @@ import zoz.cool.apihub.service.UserService;
 import zoz.cool.apihub.utils.FileUtil;
 import zoz.cool.apihub.utils.TimeUtil;
 import zoz.cool.apihub.vo.BaiduOcrVo;
+import zoz.cool.apihub.vo.InvInfoVo;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 /**
  * 发票管理
@@ -57,6 +61,8 @@ public class InvController {
     private ApihubProductPriceService apihubProductPriceService;
     @Resource
     private InvService invService;
+    @Resource
+    private ApihubUserServiceImpl apihubUserServiceImpl;
 
     @Operation(summary = "解析发票", description = "解析发票接口")
     @PostMapping("/detail/parse")
@@ -157,16 +163,30 @@ public class InvController {
 
     @Operation(summary = "发票列表")
     @GetMapping("/info/list")
-    public Page<ApihubInvInfo> invList(@RequestParam(required = false, defaultValue = "1") Integer page,
-                                       @RequestParam(required = false, defaultValue = "10") Integer pageSize,
-                                       @RequestParam(required = false) String keywords,
-                                       @RequestParam(required = false) Integer checked,
-                                       @RequestParam(required = false) Integer reimbursed,
-                                       @RequestParam(required = false) BigDecimal minAmount,
-                                       @RequestParam(required = false) BigDecimal maxAmount,
-                                       @RequestParam(required = false) LocalDate startTime,
-                                       @RequestParam(required = false) LocalDate endTime) {
-        return apihubInvInfoService.list(StpUtil.getLoginIdAsLong(), userService.isAdmin(), page, pageSize, checked, reimbursed, startTime, endTime, keywords, minAmount, maxAmount);
+    public Page<InvInfoVo> invList(@RequestParam(required = false, defaultValue = "1") Integer page, @RequestParam(required = false, defaultValue = "10") Integer pageSize, @RequestParam(required = false) String keywords, @RequestParam(required = false) Integer checked, @RequestParam(required = false) Integer reimbursed, @RequestParam(required = false) BigDecimal minAmount, @RequestParam(required = false) BigDecimal maxAmount, @RequestParam(required = false) LocalDate startTime, @RequestParam(required = false) LocalDate endTime) {
+        Page<ApihubInvInfo> rawPageData = apihubInvInfoService.list(StpUtil.getLoginIdAsLong(), userService.isAdmin(), page, pageSize, checked, reimbursed, startTime, endTime, keywords, minAmount, maxAmount);
+        Page<InvInfoVo> pageData = new Page<>(page, pageSize);
+        pageData.setTotal(rawPageData.getTotal());
+        pageData.setPages(rawPageData.getPages());
+
+        List<InvInfoVo> records = new ArrayList<>();
+        for (ApihubInvInfo invInfo : rawPageData.getRecords()) {
+            InvInfoVo invInfoVo = new InvInfoVo();
+            BeanUtils.copyProperties(invInfo, invInfoVo);
+            // 报销人
+            ApihubUser user = apihubUserServiceImpl.getUserByUid(invInfo.getUserId());
+            invInfoVo.setOwner(user.getUsername());
+            // 校验码只显示最后6位
+            if (invInfo.getCheckCode() != null && invInfo.getCheckCode().length() >= 6) {
+                invInfoVo.setCheckCode(invInfo.getCheckCode().substring(invInfo.getCheckCode().length() - 6));
+            }
+            // 查验状态
+            // TODO: 查验结果在此更新
+            invInfoVo.setInvChecked(InvCheckEnum.UNCHECKED.getCode());
+            records.add(invInfoVo);
+        }
+        pageData.setRecords(records);
+        return pageData;
     }
 
     private BigDecimal getInvParsePrice() {
