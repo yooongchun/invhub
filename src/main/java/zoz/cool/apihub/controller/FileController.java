@@ -3,7 +3,6 @@ package zoz.cool.apihub.controller;
 import cn.dev33.satoken.annotation.SaCheckLogin;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.lang.Assert;
-import cn.hutool.core.util.StrUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
@@ -17,7 +16,6 @@ import org.springframework.web.multipart.MultipartFile;
 import zoz.cool.apihub.config.AliyunOssConfig;
 import zoz.cool.apihub.config.StorageConfig;
 import zoz.cool.apihub.dao.domain.ApihubFileInfo;
-import zoz.cool.apihub.dao.domain.ApihubUser;
 import zoz.cool.apihub.dao.service.ApihubFileInfoService;
 import zoz.cool.apihub.enums.FileTypeEnum;
 import zoz.cool.apihub.enums.HttpCode;
@@ -25,6 +23,7 @@ import zoz.cool.apihub.exception.ApiException;
 import zoz.cool.apihub.service.StorageService;
 import zoz.cool.apihub.service.UserService;
 import zoz.cool.apihub.utils.ToolKit;
+import zoz.cool.apihub.vo.FilePreviewVo;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -94,6 +93,25 @@ public class FileController {
         } catch (Exception e) {
             log.error("上传文件失败", e);
             throw new ApiException(HttpCode.INTERNAL_ERROR, "上传文件失败");
+        }
+    }
+
+    @Operation(summary = "文件预览", description = "文件预览接口")
+    @GetMapping("/{fileId}/preview")
+    public FilePreviewVo filePreviewLink(@PathVariable Long fileId) {
+        ApihubFileInfo fileInfo = apihubFileInfoService.getById(fileId);
+        Assert.notNull(fileInfo, "文件不存在");
+        // 校验是否有权限
+        if (fileInfo.getUserId() != StpUtil.getLoginIdAsLong() && !userService.isAdmin()) {
+            throw new ApiException(HttpCode.FORBIDDEN);
+        }
+        // 预览
+        try {
+            String previewUrl = storageService.preview(fileInfo.getObjectName());
+            Assert.notNull(previewUrl, "预览文件失败");
+            return new FilePreviewVo(fileInfo.getFileType(), previewUrl);
+        } catch (Exception e) {
+            throw new ApiException(HttpCode.INTERNAL_ERROR, "预览文件失败");
         }
     }
 

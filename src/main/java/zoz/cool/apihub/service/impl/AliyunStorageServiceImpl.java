@@ -1,9 +1,11 @@
 package zoz.cool.apihub.service.impl;
 
 import cn.dev33.satoken.stp.StpUtil;
+import com.aliyun.oss.HttpMethod;
 import com.aliyun.oss.OSS;
 import com.aliyun.oss.OSSException;
 import com.aliyun.oss.ClientException;
+import com.aliyun.oss.model.GeneratePresignedUrlRequest;
 import com.aliyun.oss.model.OSSObject;
 import com.aliyun.oss.model.PutObjectRequest;
 import com.aliyun.oss.model.PutObjectResult;
@@ -20,6 +22,7 @@ import zoz.cool.apihub.utils.TimeUtil;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.Date;
 
 @Component
 @ConditionalOnProperty(value = "storage.type", havingValue = "aliyun")
@@ -62,6 +65,21 @@ public class AliyunStorageServiceImpl implements StorageService {
         } catch (Throwable e) {
             log.error("下载文件失败", e);
             throw new ApiException(HttpCode.INTERNAL_ERROR, "下载文件失败");
+        }
+    }
+
+    public String preview(String objectName) {
+        try {
+            // 生成签名URL。
+            GeneratePresignedUrlRequest request = new GeneratePresignedUrlRequest(aliyunOssConfig.getBucketName(), objectName, HttpMethod.GET);
+            // 设置过期时间1小时
+            Date expiration = new Date(new Date().getTime() + 3600 * 1000L);
+            request.setExpiration(expiration);
+            // 通过HTTP GET请求生成签名URL。
+            return ossClient.generatePresignedUrl(request).toString();
+        } catch (OSSException | ClientException e) {
+            log.error("预览文件失败", e);
+            throw new ApiException(HttpCode.INTERNAL_ERROR, "预览文件失败");
         }
     }
 }
