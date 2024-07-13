@@ -11,6 +11,8 @@ import zoz.cool.apihub.dao.mapper.ApihubInvInfoMapper;
 import zoz.cool.apihub.dao.service.ApihubInvInfoService;
 import org.springframework.stereotype.Service;
 import zoz.cool.apihub.dao.service.ApihubUserService;
+import zoz.cool.apihub.enums.HttpCode;
+import zoz.cool.apihub.exception.ApiException;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -52,6 +54,10 @@ public class ApihubInvInfoServiceImpl extends ServiceImpl<ApihubInvInfoMapper, A
     }
 
     public ApihubInvInfo getByFileId(Long fileId) {
-        return getOne(new QueryWrapper<ApihubInvInfo>().eq("file_id", fileId));
+        ApihubInvInfo inv = getOne(new QueryWrapper<ApihubInvInfo>().eq("file_id", fileId));
+        if(inv == null){
+            throw new ApiException(HttpCode.NOT_FOUND, "未找到对应的发票信息");
+        }
+        return inv;
     }
 }
