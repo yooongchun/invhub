@@ -163,7 +163,15 @@ public class InvController {
 
     @Operation(summary = "发票列表")
     @GetMapping("/info/list")
-    public Page<InvInfoVo> invList(@RequestParam(required = false, defaultValue = "1") Integer page, @RequestParam(required = false, defaultValue = "10") Integer pageSize, @RequestParam(required = false) String keywords, @RequestParam(required = false) Integer checked, @RequestParam(required = false) Integer reimbursed, @RequestParam(required = false) BigDecimal minAmount, @RequestParam(required = false) BigDecimal maxAmount, @RequestParam(required = false) LocalDate startTime, @RequestParam(required = false) LocalDate endTime) {
+    public Page<InvInfoVo> invList(@RequestParam(required = false, defaultValue = "1") Integer page,
+                                   @RequestParam(required = false, defaultValue = "10") Integer pageSize,
+                                   @RequestParam(required = false) String keywords,
+                                   @RequestParam(required = false) Integer checked,
+                                   @RequestParam(required = false) Integer reimbursed,
+                                   @RequestParam(required = false) BigDecimal minAmount,
+                                   @RequestParam(required = false) BigDecimal maxAmount,
+                                   @RequestParam(required = false) LocalDate startTime,
+                                   @RequestParam(required = false) LocalDate endTime) {
         Page<ApihubInvInfo> rawPageData = apihubInvInfoService.list(StpUtil.getLoginIdAsLong(), userService.isAdmin(), page, pageSize, checked, reimbursed, startTime, endTime, keywords, minAmount, maxAmount);
         Page<InvInfoVo> pageData = new Page<>(page, pageSize);
         pageData.setTotal(rawPageData.getTotal());

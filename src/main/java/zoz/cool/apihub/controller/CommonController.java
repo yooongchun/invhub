@@ -28,7 +28,7 @@ public class CommonController {
 
     @GetMapping("/daily-words")
     @Operation(summary = "每日一句")
-    @Cacheable(value = "daily-words", key = "'daily-words-'+ T(java.time.LocalDate).now().toString()")
+    @Cacheable(value = "daily-words-", key = "T(java.time.LocalDate).now().toString()")
     public DailyWordsVo handleDailyWords() {
         String res = HttpUtil.get(API_SHANBEI);
         log.info("每日一句接口返回：{}", res);

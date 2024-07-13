@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -98,6 +99,7 @@ public class FileController {
 
     @Operation(summary = "文件预览", description = "文件预览接口")
     @GetMapping("/{fileId}/preview")
+    @Cacheable(value = "previewOSSFile:", key = "#fileId", unless = "#result == null")
     public FilePreviewVo filePreviewLink(@PathVariable Long fileId) {
         ApihubFileInfo fileInfo = apihubFileInfoService.getById(fileId);
         Assert.notNull(fileInfo, "文件不存在");
