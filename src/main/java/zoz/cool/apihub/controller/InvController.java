@@ -2,6 +2,7 @@ package zoz.cool.apihub.controller;
 
 import cn.dev33.satoken.annotation.SaCheckLogin;
 import cn.dev33.satoken.stp.StpUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -134,25 +135,13 @@ public class InvController {
     @Operation(summary = "获取发票信息", description = "获取发票信息接口")
     @GetMapping("/info/{invId}")
     public ApihubInvInfo getInvInfo(@PathVariable Long invId) {
-        ApihubInvInfo invInfo = apihubInvInfoService.getById(invId);
-        if (invInfo == null) {
-            throw new ApiException(HttpCode.VALIDATE_FAILED, "发票信息不存在");
-        }
-        ApihubUser user = userService.getLoginUser();
-        // 校验权限
-        if (!Objects.equals(user.getUid(), invInfo.getUserId()) && !userService.isAdmin()) {
-            throw new ApiException(HttpCode.FORBIDDEN);
-        }
-        return invInfo;
+        return getWithAuth(invId);
     }
 
     @Operation(summary = "通过文件获取发票信息", description = "通过文件获取发票信息接口")
     @GetMapping("/info/file/{fileId}")
     public ApihubInvInfo getByFileId(@PathVariable Long fileId) {
         ApihubInvInfo invInfo = apihubInvInfoService.getByFileId(fileId);
-        if (invInfo == null) {
-            throw new ApiException(HttpCode.VALIDATE_FAILED, "发票信息不存在");
-        }
         ApihubUser user = userService.getLoginUser();
         // 校验权限
         if (!Objects.equals(user.getUid(), invInfo.getUserId()) && !userService.isAdmin()) {
@@ -161,11 +150,48 @@ public class InvController {
         return invInfo;
     }
 
+    @Operation(summary = "更新信息")
+    @PutMapping("/info/{id}")
+    public void update(@PathVariable Long id, @RequestBody InvInfoVo invInfoVo) {
+        ApihubInvInfo invInfo = getWithAuth(id);
+        BeanUtils.copyProperties(invInfoVo, invInfo);
+        if (StrUtil.isNotEmpty(invInfoVo.getOwner())) {
+            invInfo.setRemark(invInfoVo.getOwner());
+        }
+        invInfoVo.setId(id);
+        apihubInvInfoService.updateById(invInfo);
+    }
+
+    @Operation(summary = "新增发票信息")
+    @PostMapping("/info")
+    public void add(@RequestBody InvInfoVo invInfoVo) {
+        boolean exists = apihubInvInfoService.exists(new QueryWrapper<ApihubInvInfo>()
+                .eq("user_id", StpUtil.getLoginIdAsLong())
+                .and(q -> q
+                        .eq(invInfoVo.getInvCode() != null, "inv_code", invInfoVo.getInvCode())
+                        .or().eq("inv_num", invInfoVo.getInvNum()))
+                        .or().eq("file_id", invInfoVo.getFileId()));
+        if (exists) {
+            throw new ApiException(HttpCode.VALIDATE_FAILED, "发票信息已存在");
+        }
+        ApihubInvInfo invInfo = new ApihubInvInfo();
+        BeanUtils.copyProperties(invInfoVo, invInfo);
+        invInfo.setRemark(invInfoVo.getOwner());
+        invInfo.setUserId(StpUtil.getLoginIdAsLong());
+        apihubInvInfoService.save(invInfo);
+    }
+    @Operation(summary = "删除发票信息")
+    @DeleteMapping("/info/{ids}")
+    public void delete(@PathVariable String ids) {
+        List<Long> idList = StrUtil.split(ids, ',').stream().map(Long::parseLong).toList();
+        apihubInvInfoService.removeBatchByIds(idList);
+    }
+
     @Operation(summary = "发票列表")
     @GetMapping("/info/list")
-    public Page<InvInfoVo> invList(@RequestParam(required = false, defaultValue = "1") Integer page, @RequestParam(required = false, defaultValue = "10") Integer pageSize, @RequestParam(required = false) String keywords, @RequestParam(required = false) Integer checked, @RequestParam(required = false) Integer reimbursed, @RequestParam(required = false) BigDecimal minAmount, @RequestParam(required = false) BigDecimal maxAmount, @RequestParam(required = false) LocalDate startTime, @RequestParam(required = false) LocalDate endTime) {
-        Page<ApihubInvInfo> rawPageData = apihubInvInfoService.list(StpUtil.getLoginIdAsLong(), userService.isAdmin(), page, pageSize, checked, reimbursed, startTime, endTime, keywords, minAmount, maxAmount);
-        Page<InvInfoVo> pageData = new Page<>(page, pageSize);
+    public Page<InvInfoVo> invList(@RequestParam(required = false, defaultValue = "1") Integer pageNum, @RequestParam(required = false, defaultValue = "10") Integer pageSize, @RequestParam(required = false) String keywords, @RequestParam(required = false) Integer checked, @RequestParam(required = false) Integer reimbursed, @RequestParam(required = false) BigDecimal minAmount, @RequestParam(required = false) BigDecimal maxAmount, @RequestParam(required = false) LocalDate startTime, @RequestParam(required = false) LocalDate endTime) {
+        Page<ApihubInvInfo> rawPageData = apihubInvInfoService.list(StpUtil.getLoginIdAsLong(), userService.isAdmin(), pageNum, pageSize, checked, reimbursed, startTime, endTime, keywords, minAmount, maxAmount);
+        Page<InvInfoVo> pageData = new Page<>(pageNum, pageSize);
         pageData.setTotal(rawPageData.getTotal());
         pageData.setPages(rawPageData.getPages());
 
@@ -174,8 +200,12 @@ public class InvController {
             InvInfoVo invInfoVo = new InvInfoVo();
             BeanUtils.copyProperties(invInfo, invInfoVo);
             // 报销人
-            ApihubUser user = apihubUserServiceImpl.getUserByUid(invInfo.getUserId());
-            invInfoVo.setOwner(user.getUsername());
+            if (StrUtil.isNotEmpty(invInfo.getRemark())) {
+                invInfoVo.setOwner(invInfo.getRemark());
+            } else {
+                ApihubUser user = apihubUserServiceImpl.getUserByUid(invInfo.getUserId());
+                invInfoVo.setOwner(user.getUsername());
+            }
             // 校验码只显示最后6位
             if (invInfo.getCheckCode() != null && invInfo.getCheckCode().length() >= 6) {
                 invInfoVo.setCheckCode(invInfo.getCheckCode().substring(invInfo.getCheckCode().length() - 6));
@@ -187,6 +217,19 @@ public class InvController {
         }
         pageData.setRecords(records);
         return pageData;
+    }
+
+    private ApihubInvInfo getWithAuth(Long id) {
+        ApihubInvInfo invInfo = apihubInvInfoService.getById(id);
+        if (invInfo == null) {
+            throw new ApiException(HttpCode.VALIDATE_FAILED, "发票信息不存在");
+        }
+        ApihubUser user = userService.getLoginUser();
+        // 校验权限
+        if (!Objects.equals(user.getUid(), invInfo.getUserId()) && !userService.isAdmin()) {
+            throw new ApiException(HttpCode.FORBIDDEN);
+        }
+        return invInfo;
     }
 
     private BigDecimal getInvParsePrice() {

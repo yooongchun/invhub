@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -27,7 +28,7 @@ import zoz.cool.apihub.vo.FilePreviewVo;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
 
 /**
  * 文件管理
@@ -98,6 +99,7 @@ public class FileController {
 
     @Operation(summary = "文件预览", description = "文件预览接口")
     @GetMapping("/{fileId}/preview")
+    @Cacheable(value = "previewOSSFile", key = "#fileId", unless = "#result == null")
     public FilePreviewVo filePreviewLink(@PathVariable Long fileId) {
         ApihubFileInfo fileInfo = apihubFileInfoService.getById(fileId);
         Assert.notNull(fileInfo, "文件不存在");
@@ -129,10 +131,7 @@ public class FileController {
             byte[] fileBytes = storageService.download(fileInfo.getObjectName());
             HttpHeaders headers = new HttpHeaders();
             headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileInfo.getFileName());
-            return ResponseEntity.ok()
-                    .headers(headers)
-                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                    .body(new InputStreamResource(new ByteArrayInputStream(fileBytes)));
+            return ResponseEntity.ok().headers(headers).contentType(MediaType.APPLICATION_OCTET_STREAM).body(new InputStreamResource(new ByteArrayInputStream(fileBytes)));
         } catch (Exception e) {
             log.error("下载文件失败", e);
             throw new ApiException(HttpCode.INTERNAL_ERROR, "下载文件失败");

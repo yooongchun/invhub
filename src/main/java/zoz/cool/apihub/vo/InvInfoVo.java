@@ -51,4 +51,8 @@ public class InvInfoVo {
      * 查验结果:10: 未查验 20: 查验中 30: 成功 31: 查无此票 32: 查验不一致 33: 作废  40: 查验失败
      */
     private Integer invChecked;
+    /**
+     * 文件Id
+     */
+    private Long fileId;
 }

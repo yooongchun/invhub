@@ -76,7 +76,9 @@ public class AliyunStorageServiceImpl implements StorageService {
             Date expiration = new Date(new Date().getTime() + 3600 * 1000L);
             request.setExpiration(expiration);
             // 通过HTTP GET请求生成签名URL。
-            return ossClient.generatePresignedUrl(request).toString();
+            String previewUrl = ossClient.generatePresignedUrl(request).toString();
+            log.info("预览文件URL: {}", previewUrl);
+            return previewUrl;
         } catch (OSSException | ClientException e) {
             log.error("预览文件失败", e);
             throw new ApiException(HttpCode.INTERNAL_ERROR, "预览文件失败");
