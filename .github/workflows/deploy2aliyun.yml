@@ -34,7 +34,7 @@ jobs:
       env:
         SSH_PRIVATE_KEY: ${{ secrets.ALIYUN_ECS_PRIVATE_KEY }}
         ARGS: "-avzr --delete"
-        SOURCE: "./target/api-hub-1.0.0.SNAPSHOT.jar"
+        SOURCE: "./target/api-hub-1.0.0-SNAPSHOT.jar"
         REMOTE_HOST: ${{ secrets.ALIYUN_ECS_REMOTE_HOST }}
         REMOTE_USER: ${{ secrets.ALIYUN_ECS_REMOTE_USER }}
         TARGET: "/home/www/apihub/target"
