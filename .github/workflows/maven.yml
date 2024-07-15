@@ -46,7 +46,7 @@ jobs:
         TARGET_NAME: "target"
         WORKDIR: "/home/www/apihub"
       with:
-        host:  ${{ secrets.ALIYUN_ECS_SERVER_HOST }}
+        host:  ${{ secrets.ALIYUN_ECS_REMOTE_HOST }}
         username: ${{ secret.ALIYUN_ECS_REMOTE_USER }}
         password: ${{ secrets.ALIYUN_ECS_PRIVATE_KEY }}
         script: |          
