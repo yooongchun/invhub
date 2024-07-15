@@ -240,3 +240,22 @@ CREATE TABLE `apihub_product_price`
     `update_time`  datetime            DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`id`)
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COMMENT = '产品定价表' ROW_FORMAT = DYNAMIC;
+
+INSERT INTO `apihub_product_price` VALUES (1, 'INV_PARSE', '发票解析', 0.05, 0, '发票解析', NOW(), NOW());
+
+-- ----------------------------
+-- Table structure for apihub_message
+-- ----------------------------
+DROP TABLE IF EXISTS `apihub_message`;
+CREATE TABLE `apihub_message`
+(
+    `id`           bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `user_id`    bigint(20)         NOT NULL COMMENT '用户ID',
+    `parent_id` bigint(20)         COMMENT '父级ID',
+    `text` text    COMMENT '内容',
+    `type`        tinyint(1)      NOT NULL DEFAULT 0 COMMENT '0->message 1->feedback',
+    `deleted`      tinyint(1)          NOT NULL DEFAULT 0 COMMENT '是否删除:0-->否，1-->是',
+    `create_time`  datetime            DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `update_time`  datetime            DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`)
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COMMENT = '消息表' ROW_FORMAT = DYNAMIC;
