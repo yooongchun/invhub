@@ -34,27 +34,24 @@ jobs:
       env:
         SSH_PRIVATE_KEY: ${{ secrets.ALIYUN_ECS_PRIVATE_KEY }}
         ARGS: "-avzr --delete"
-        SOURCE: "./"
+        SOURCE: "./target/api-hub-1.0.0.SNAPSHOT.jar"
         REMOTE_HOST: ${{ secrets.ALIYUN_ECS_REMOTE_HOST }}
         REMOTE_USER: ${{ secrets.ALIYUN_ECS_REMOTE_USER }}
-        TARGET: "/home/www/apihub/"
+        TARGET: "/home/www/apihub/target"
     - name: Deploy on aliyun server
       uses: appleboy/ssh-action@master
       env:
         APP_NAME: "api-hub-1.0.0-SNAPSHOT.jar"
-        PACKAGE_NAME: "output.tar.gz"
-        TARGET_NAME: "target"
         WORKDIR: "/home/www/apihub"
       with:
         host: ${{ secrets.ALIYUN_ECS_REMOTE_HOST }}
         username: ${{ secrets.ALIYUN_ECS_REMOTE_USER }}
-        password: ${{ secrets.ALIYUN_ECS_PRIVATE_KEY }}
+        password: ${{ secrets.ALIYUN_ECS_REMOTE_PASSWD }}
         script: |          
           cd ${WORKDIR}
-          rm -rf APPNAME{APP_NAME} {TARGET_NAME}
-          tar xf ${PACKAGE_NAME}
-          mv ./TARGETNAME/{TARGET_NAME}/{APP_NAME} ./
-          rm -rf PACKAGENAME{PACKAGE_NAME} {TARGET_NAME}
+          rm -rf ${APP_NAME}
+          mv target/${APP_NAME} ./
+          rm -rf target
           
           supervisorctl restart apihub
           echo 'deploy apihub done!'
