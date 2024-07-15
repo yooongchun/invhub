@@ -49,9 +49,11 @@ jobs:
         password: ${{ secrets.ALIYUN_ECS_REMOTE_PASSWD }}
         script: |          
           cd ${WORKDIR}
+          pwd
+          ls -lah
           rm -rf ${APP_NAME}
-          mv target/${APP_NAME} ./
-          rm -rf target
+          mv ./target/${APP_NAME} ./
+          rm -rf ./target
           
           supervisorctl restart apihub
           echo 'deploy apihub done!'
