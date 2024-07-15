@@ -37,24 +37,29 @@ jobs:
         SOURCE: "./target/api-hub-1.0.0-SNAPSHOT.jar"
         REMOTE_HOST: ${{ secrets.ALIYUN_ECS_REMOTE_HOST }}
         REMOTE_USER: ${{ secrets.ALIYUN_ECS_REMOTE_USER }}
-        TARGET: "/home/www/apihub/target"
+        TARGET: "/home/www/apihub"
     - name: Deploy on aliyun server
       uses: appleboy/ssh-action@master
-      env:
-        APP_NAME: "api-hub-1.0.0-SNAPSHOT.jar"
-        WORKDIR: "/home/www/apihub"
       with:
         host: ${{ secrets.ALIYUN_ECS_REMOTE_HOST }}
         username: ${{ secrets.ALIYUN_ECS_REMOTE_USER }}
         password: ${{ secrets.ALIYUN_ECS_REMOTE_PASSWD }}
         script: |          
-          cd ${WORKDIR}
-          pwd
-          ls -lah
-          rm -rf ${APP_NAME}
-          mv ./target/${APP_NAME} ./
-          rm -rf ./target
+          cd /home/www/apihub
+          rm -rf apihub.jar
+          mv api-hub-1.0.0-SNAPSHOT.jar apihub.jar
           
           supervisorctl restart apihub
           echo 'deploy apihub done!'
           exit
+    - name: Send feishu message
+      env:
+        ACTIONS_FEISHU_TAG: 'v1.3.1' # 替换此变量, 最新见 https://github.com/xiachufang/actions-feishu/releases
+        INPUT_WEBHOOK: "${{ secrets.FEISHU_ROBOT_WEBHOOK_URL }}"
+        INPUT_MESSAGE_TYPE: "post"
+        INPUT_TITLE: "Github Actions Deploy Aliyun ECS"
+        INPUT_CONTENT: "I'm message body\nfrom: ${{ github.repository }}"
+      run: |
+        wget -q https://github.com/xiachufang/actions-feishu/releases/download/${{ env.ACTIONS_FEISHU_TAG }}/linux-amd64-actions-feishu.tar.gz
+        tar zxf linux-amd64-actions-feishu.tar.gz feishu
+        ./feishu
