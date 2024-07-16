@@ -9,4 +9,6 @@ public interface StorageService {
     String upload(MultipartFile file);
 
     byte[] download(String savePath);
+
+    String preview(String savePath);
 }

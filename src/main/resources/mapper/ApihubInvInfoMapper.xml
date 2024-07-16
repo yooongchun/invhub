@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="zoz.cool.apihub.dao.mapper.ApihubInvInfoMapper">
+
+    <resultMap id="BaseResultMap" type="zoz.cool.apihub.dao.domain.ApihubInvInfo">
+            <id property="id" column="id" jdbcType="BIGINT"/>
+            <result property="userId" column="user_id" jdbcType="BIGINT"/>
+            <result property="fileId" column="file_id" jdbcType="BIGINT"/>
+            <result property="invDetailId" column="inv_detail_id" jdbcType="BIGINT"/>
+            <result property="invCheckId" column="inv_check_id" jdbcType="BIGINT"/>
+            <result property="checked" column="checked" jdbcType="TINYINT"/>
+            <result property="reimbursed" column="reimbursed" jdbcType="TINYINT"/>
+            <result property="invCode" column="inv_code" jdbcType="VARCHAR"/>
+            <result property="invNum" column="inv_num" jdbcType="VARCHAR"/>
+            <result property="checkCode" column="check_code" jdbcType="VARCHAR"/>
+            <result property="invDate" column="inv_date" jdbcType="DATE"/>
+            <result property="amount" column="amount" jdbcType="DECIMAL"/>
+            <result property="tax" column="tax" jdbcType="VARCHAR"/>
+            <result property="invType" column="inv_type" jdbcType="VARCHAR"/>
+            <result property="method" column="method" jdbcType="VARCHAR"/>
+            <result property="deleted" column="deleted" jdbcType="TINYINT"/>
+            <result property="remark" column="remark" jdbcType="VARCHAR"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+            <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,user_id,file_id,
+        inv_detail_id,inv_check_id,checked,
+        reimbursed,inv_code,inv_num,
+        check_code,inv_date,amount,
+        tax,inv_type,method,
+        deleted,remark,create_time,
+        update_time
+    </sql>
+</mapper>

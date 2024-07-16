@@ -9,5 +9,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
 * @createDate 2024-07-03 16:26:39
 */
 public interface ApihubFileInfoService extends IService<ApihubFileInfo> {
-    ApihubFileInfo getByFileHash(String fileHash);
+    ApihubFileInfo getByFileHash(String fileHash, Long userId);
 }

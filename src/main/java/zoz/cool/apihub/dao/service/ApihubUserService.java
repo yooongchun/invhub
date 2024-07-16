@@ -1,9 +1,11 @@
 package zoz.cool.apihub.dao.service;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import zoz.cool.apihub.dao.domain.ApihubUser;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -19,4 +21,6 @@ public interface ApihubUserService extends IService<ApihubUser> {
     BigDecimal addBalance(Long uid, BigDecimal amount);
 
     List<ApihubUser> getAdmins();
+
+    Page<ApihubUser> listUser(Integer page, Integer size, String key, Integer deleted, LocalDate startTime, LocalDate endTime);
 }

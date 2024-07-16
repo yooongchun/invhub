@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -16,7 +17,6 @@ import org.springframework.web.multipart.MultipartFile;
 import zoz.cool.apihub.config.AliyunOssConfig;
 import zoz.cool.apihub.config.StorageConfig;
 import zoz.cool.apihub.dao.domain.ApihubFileInfo;
-import zoz.cool.apihub.dao.domain.ApihubUser;
 import zoz.cool.apihub.dao.service.ApihubFileInfoService;
 import zoz.cool.apihub.enums.FileTypeEnum;
 import zoz.cool.apihub.enums.HttpCode;
@@ -24,11 +24,11 @@ import zoz.cool.apihub.exception.ApiException;
 import zoz.cool.apihub.service.StorageService;
 import zoz.cool.apihub.service.UserService;
 import zoz.cool.apihub.utils.ToolKit;
+import zoz.cool.apihub.vo.FilePreviewVo;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Objects;
 
 /**
  * 文件管理
@@ -38,7 +38,7 @@ import java.util.Objects;
 @RestController
 @ResponseBody
 @RequestMapping("/file")
-@Tag(name = "FileController", description = "文件管理")
+@Tag(name = "03.文件管理")
 public class FileController {
     @Resource
     private StorageService storageService;
@@ -73,11 +73,12 @@ public class FileController {
             throw new ApiException(HttpCode.INTERNAL_ERROR, "读取字节流失败");
         }
         String fileHash = ToolKit.calFileHash(new ByteArrayInputStream(fileBytes));
-        // 已存在则不能重复上传
-        if (apihubFileInfoService.getByFileHash(fileHash) != null) {
-            throw new ApiException(HttpCode.VALIDATE_FAILED, "文件已存在");
+        // 已存在则不重复上传
+        ApihubFileInfo fileInfo = apihubFileInfoService.getByFileHash(fileHash, StpUtil.getLoginIdAsLong());
+        if (fileInfo != null) {
+            return fileInfo;
         }
-        ApihubFileInfo fileInfo = new ApihubFileInfo();
+        fileInfo = new ApihubFileInfo();
         fileInfo.setUserId(StpUtil.getLoginIdAsLong());
         fileInfo.setFileName(file.getOriginalFilename());
         fileInfo.setFileHash(ToolKit.calFileHash(new ByteArrayInputStream(fileBytes)));
@@ -96,14 +97,33 @@ public class FileController {
         }
     }
 
+    @Operation(summary = "文件预览", description = "文件预览接口")
+    @GetMapping("/{fileId}/preview")
+    @Cacheable(value = "previewOSSFile", key = "#fileId", unless = "#result == null")
+    public FilePreviewVo filePreviewLink(@PathVariable Long fileId) {
+        ApihubFileInfo fileInfo = apihubFileInfoService.getById(fileId);
+        Assert.notNull(fileInfo, "文件不存在");
+        // 校验是否有权限
+        if (fileInfo.getUserId() != StpUtil.getLoginIdAsLong() && !userService.isAdmin()) {
+            throw new ApiException(HttpCode.FORBIDDEN);
+        }
+        // 预览
+        try {
+            String previewUrl = storageService.preview(fileInfo.getObjectName());
+            Assert.notNull(previewUrl, "预览文件失败");
+            return new FilePreviewVo(fileInfo.getFileType(), previewUrl);
+        } catch (Exception e) {
+            throw new ApiException(HttpCode.INTERNAL_ERROR, "预览文件失败");
+        }
+    }
+
     @Operation(summary = "下载文件", description = "下载文件接口")
     @GetMapping("/{fileId}")
     public ResponseEntity<InputStreamResource> download(@PathVariable Long fileId) {
         ApihubFileInfo fileInfo = apihubFileInfoService.getById(fileId);
         Assert.notNull(fileInfo, "文件不存在");
         // 校验是否有权限
-        ApihubUser user = userService.getLoginUser();
-        if (!Objects.equals(user.getUid(), fileInfo.getUserId()) && user.getAdmin() == 0) {
+        if (fileInfo.getUserId() == StpUtil.getLoginIdAsLong() && !userService.isAdmin()) {
             throw new ApiException(HttpCode.FORBIDDEN);
         }
         // 下载
@@ -111,10 +131,7 @@ public class FileController {
             byte[] fileBytes = storageService.download(fileInfo.getObjectName());
             HttpHeaders headers = new HttpHeaders();
             headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileInfo.getFileName());
-            return ResponseEntity.ok()
-                    .headers(headers)
-                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                    .body(new InputStreamResource(new ByteArrayInputStream(fileBytes)));
+            return ResponseEntity.ok().headers(headers).contentType(MediaType.APPLICATION_OCTET_STREAM).body(new InputStreamResource(new ByteArrayInputStream(fileBytes)));
         } catch (Exception e) {
             log.error("下载文件失败", e);
             throw new ApiException(HttpCode.INTERNAL_ERROR, "下载文件失败");

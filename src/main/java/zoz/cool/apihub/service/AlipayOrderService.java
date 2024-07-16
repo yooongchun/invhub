@@ -178,7 +178,7 @@ public class AlipayOrderService {
     }
 
     public void asyncUpdateOrder(String outTradeNo) {
-        LocalDateTime expireTime = LocalDateTime.now().plusMinutes(alipayConfig.getMaxQueryTime());
+        LocalDateTime expireTime = LocalDateTime.now().plusSeconds(alipayConfig.getMaxQueryTime());
         ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
         executorService.scheduleAtFixedRate(() -> {
             if (LocalDateTime.now().isAfter(expireTime)) { //如已超时，则退出

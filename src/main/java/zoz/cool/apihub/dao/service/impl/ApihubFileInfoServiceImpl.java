@@ -16,8 +16,8 @@ import org.springframework.stereotype.Service;
 public class ApihubFileInfoServiceImpl extends ServiceImpl<ApihubFileInfoMapper, ApihubFileInfo>
         implements ApihubFileInfoService {
 
-    public ApihubFileInfo getByFileHash(String fileHash) {
-        return getOne(new QueryWrapper<ApihubFileInfo>().eq("file_hash", fileHash));
+    public ApihubFileInfo getByFileHash(String fileHash, Long userId) {
+        return getOne(new QueryWrapper<ApihubFileInfo>().eq("file_hash", fileHash).eq("user_id", userId));
     }
 }
 

@@ -1,7 +1,9 @@
 package zoz.cool.apihub.dao.service.impl;
 
 import cn.hutool.core.lang.Assert;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
 import zoz.cool.apihub.dao.domain.ApihubUser;
@@ -9,6 +11,7 @@ import zoz.cool.apihub.dao.mapper.ApihubUserMapper;
 import zoz.cool.apihub.dao.service.ApihubUserService;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -43,6 +46,15 @@ public class ApihubUserServiceImpl extends ServiceImpl<ApihubUserMapper, ApihubU
 
     public List<ApihubUser> getAdmins() {
         return list(new QueryWrapper<ApihubUser>().eq("admin", 1));
+    }
+
+    public Page<ApihubUser> listUser(Integer page, Integer size, String key, Integer deleted, LocalDate startTime, LocalDate endTime) {
+        Page<ApihubUser> pageVo = new Page<>(page, size);
+        QueryWrapper<ApihubUser> query = new QueryWrapper<ApihubUser>().eq(deleted != null, "deleted", deleted).ge(startTime != null, "create_time", startTime).le(endTime != null, "create_time", endTime);
+        if (StrUtil.isNotBlank(key)) {
+            query.like("username", key).or().like("email", key).or().like("phone", key);
+        }
+        return baseMapper.selectPage(pageVo, query);
     }
 }
 

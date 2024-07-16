@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="zoz.cool.apihub.dao.mapper.ApihubInvDetailMapper">
+
+    <resultMap id="BaseResultMap" type="zoz.cool.apihub.dao.domain.ApihubInvDetail">
+            <id property="id" column="id" jdbcType="BIGINT"/>
+            <result property="userId" column="user_id" jdbcType="BIGINT"/>
+            <result property="fileId" column="file_id" jdbcType="BIGINT"/>
+            <result property="method" column="method" jdbcType="VARCHAR"/>
+            <result property="status" column="status" jdbcType="TINYINT"/>
+            <result property="deleted" column="deleted" jdbcType="TINYINT"/>
+            <result property="remark" column="remark" jdbcType="VARCHAR"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+            <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+            <result property="serviceType" column="service_type" jdbcType="VARCHAR"/>
+            <result property="invoiceCode" column="invoice_code" jdbcType="VARCHAR"/>
+            <result property="invoiceNum" column="invoice_num" jdbcType="VARCHAR"/>
+            <result property="invoiceType" column="invoice_type" jdbcType="VARCHAR"/>
+            <result property="invoiceTypeOrg" column="invoice_type_org" jdbcType="VARCHAR"/>
+            <result property="invoiceCodeConfirm" column="invoice_code_confirm" jdbcType="VARCHAR"/>
+            <result property="invoiceNumConfirm" column="invoice_num_confirm" jdbcType="VARCHAR"/>
+            <result property="invoiceNumDigit" column="invoice_num_digit" jdbcType="VARCHAR"/>
+            <result property="invoiceTag" column="invoice_tag" jdbcType="VARCHAR"/>
+            <result property="machineNum" column="machine_num" jdbcType="VARCHAR"/>
+            <result property="machineCode" column="machine_code" jdbcType="VARCHAR"/>
+            <result property="checkCode" column="check_code" jdbcType="VARCHAR"/>
+            <result property="invoiceDate" column="invoice_date" jdbcType="VARCHAR"/>
+            <result property="purchaserName" column="purchaser_name" jdbcType="VARCHAR"/>
+            <result property="purchaserRegisterNum" column="purchaser_register_num" jdbcType="VARCHAR"/>
+            <result property="purchaserAddress" column="purchaser_address" jdbcType="VARCHAR"/>
+            <result property="purchaserBank" column="purchaser_bank" jdbcType="VARCHAR"/>
+            <result property="sellerName" column="seller_name" jdbcType="VARCHAR"/>
+            <result property="sellerRegisterNum" column="seller_register_num" jdbcType="VARCHAR"/>
+            <result property="sellerAddress" column="seller_address" jdbcType="VARCHAR"/>
+            <result property="sellerBank" column="seller_bank" jdbcType="VARCHAR"/>
+            <result property="password" column="password" jdbcType="VARCHAR"/>
+            <result property="province" column="province" jdbcType="VARCHAR"/>
+            <result property="city" column="city" jdbcType="VARCHAR"/>
+            <result property="sheetNum" column="sheet_num" jdbcType="VARCHAR"/>
+            <result property="agent" column="agent" jdbcType="VARCHAR"/>
+            <result property="commodity" column="commodity" jdbcType="VARCHAR"/>
+            <result property="totalAmount" column="total_amount" jdbcType="DECIMAL"/>
+            <result property="totalTax" column="total_tax" jdbcType="DECIMAL"/>
+            <result property="amountInWords" column="amount_in_words" jdbcType="VARCHAR"/>
+            <result property="amountInFiguers" column="amount_in_figuers" jdbcType="DECIMAL"/>
+            <result property="payee" column="payee" jdbcType="VARCHAR"/>
+            <result property="checker" column="checker" jdbcType="VARCHAR"/>
+            <result property="noteDrawer" column="note_drawer" jdbcType="VARCHAR"/>
+            <result property="remarks" column="remarks" jdbcType="VARCHAR"/>
+            <result property="companySeal" column="company_seal" jdbcType="VARCHAR"/>
+            <result property="sealInfo" column="seal_info" jdbcType="VARCHAR"/>
+            <result property="extra" column="extra" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,user_id,file_id,
+        method,status,deleted,
+        remark,create_time,update_time,
+        service_type,invoice_code,invoice_num,
+        invoice_type,invoice_type_org,invoice_code_confirm,
+        invoice_num_confirm,invoice_num_digit,invoice_tag,
+        machine_num,machine_code,check_code,
+        invoice_date,purchaser_name,purchaser_register_num,
+        purchaser_address,purchaser_bank,seller_name,
+        seller_register_num,seller_address,seller_bank,
+        password,province,city,
+        sheet_num,agent,commodity,
+        total_amount,total_tax,amount_in_words,
+        amount_in_figuers,payee,checker,
+        note_drawer,remarks,company_seal,
+        seal_info,extra
+    </sql>
+</mapper>

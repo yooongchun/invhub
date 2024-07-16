@@ -18,7 +18,7 @@ import java.util.Map;
  */
 @ResponseBody
 @RestController
-@Tag(name = "AlipayCallbackController", description = "支付宝订单消息回调")
+@Tag(name = "06.支付宝回调", description = "支付宝订单消息回调")
 @RequestMapping("/alipay/callback")
 public class AlipayCallbackController {
     @Resource

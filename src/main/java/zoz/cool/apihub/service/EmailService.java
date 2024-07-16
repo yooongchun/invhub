@@ -13,7 +13,7 @@ import zoz.cool.apihub.constant.EmailConstant;
 import zoz.cool.apihub.dao.domain.ApihubAlipayOrder;
 import zoz.cool.apihub.dao.domain.ApihubUser;
 import zoz.cool.apihub.dao.service.ApihubUserService;
-import zoz.cool.apihub.vo.ReportDataVo;
+import zoz.cool.apihub.vo.StatsDataVo;
 
 import java.time.LocalDate;
 import java.util.Arrays;
@@ -54,7 +54,7 @@ public class EmailService {
         }
     }
 
-    public void sendDailyReport(ReportDataVo dayVo, ReportDataVo weekVo, ReportDataVo monthVo, ReportDataVo yearVo, ReportDataVo allVo) {
+    public void sendDailyReport(StatsDataVo dayVo, StatsDataVo weekVo, StatsDataVo monthVo, StatsDataVo yearVo, StatsDataVo allVo) {
         // 获取管理员列表
         List<String> admins = apihubUserService.getAdmins().stream().map(ApihubUser::getEmail).filter(StrUtil::isNotEmpty).toList();
         if (CollUtil.isNotEmpty(admins)) {

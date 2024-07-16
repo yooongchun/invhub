@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 /**
 * @author zhayongchun
 * @description 针对表【apihub_product_price(产品定价表)】的数据库操作Mapper
-* @createDate 2024-07-04 16:59:28
+* @createDate 2024-07-11 11:58:57
 * @Entity zoz.cool.apihub.dao.domain.ApihubProductPrice
 */
 public interface ApihubProductPriceMapper extends BaseMapper<ApihubProductPrice> {

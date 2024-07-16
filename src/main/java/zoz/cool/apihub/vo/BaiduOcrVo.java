@@ -52,31 +52,31 @@ public class BaiduOcrVo {
     @Schema(description = "是否代开")
     private String Agent;
     @Schema(description = "货物名称")
-    private List<RowWord> CommodityName;
+    private List<RowWordVo> CommodityName;
     @Schema(description = "规格型号")
-    private List<RowWord> CommodityType;
+    private List<RowWordVo> CommodityType;
     @Schema(description = "单位")
-    private List<RowWord> CommodityUnit;
+    private List<RowWordVo> CommodityUnit;
     @Schema(description = "数量")
-    private List<RowWord> CommodityNum;
+    private List<RowWordVo> CommodityNum;
     @Schema(description = "单价")
-    private List<RowWord> CommodityPrice;
+    private List<RowWordVo> CommodityPrice;
     @Schema(description = "金额")
-    private List<RowWord> CommodityAmount;
+    private List<RowWordVo> CommodityAmount;
     @Schema(description = "税率")
-    private List<RowWord> CommodityTaxRate;
+    private List<RowWordVo> CommodityTaxRate;
     @Schema(description = "税额")
-    private String CommodityTax;
+    private List<RowWordVo> CommodityTax;
     @Schema(description = "车牌号。仅通行费增值税电子普通发票含有此参数")
-    private List<RowWord> CommodityPlateNum;
+    private List<RowWordVo> CommodityPlateNum;
     @Schema(description = "类型。仅通行费增值税电子普通发票含有此参数")
-    private List<RowWord> CommodityVehicleType;
+    private List<RowWordVo> CommodityVehicleType;
     @Schema(description = "通行日期起。仅通行费增值税电子普通发票含有此参数")
-    private List<RowWord> CommodityStartDate;
+    private List<RowWordVo> CommodityStartDate;
     @Schema(description = "通行日期止。仅通行费增值税电子普通发票含有此参数")
-    private List<RowWord> CommodityEndDate;
-    @Schema(description = "通行路线。仅通行费增值税电子普通发票含有此参数")
-    private List<RowWord> OnlinePay;
+    private List<RowWordVo> CommodityEndDate;
+    @Schema(description = "电子支付标识。仅区块链发票含有此参数")
+    private String OnlinePay;
     @Schema(description = "销售方名称")
     private String SellerName;
     @Schema(description = "销售方纳税人识别号")
@@ -107,10 +107,3 @@ public class BaiduOcrVo {
     private String seal_info;
 }
 
-@Data
-class RowWord {
-    @Schema(description = "行号")
-    private Integer row;
-    @Schema(description = "内容")
-    private String word;
-}
