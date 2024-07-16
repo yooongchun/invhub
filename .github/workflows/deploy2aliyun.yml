@@ -49,7 +49,8 @@ jobs:
           rm -rf apihub.jar
           mv api-hub-1.0.0-SNAPSHOT.jar apihub.jar
           
-          supervisorctl restart apihub
+          systemctl restart apihub
+          sytemctl status apihub
           echo 'deploy apihub done!'
           exit
     - name: Send feishu message
