@@ -27,13 +27,15 @@ CREATE TABLE `apihub_user`
     `avatar`      varchar(500)    NOT NULL DEFAULT '' COMMENT '头像',
     `remark`      varchar(500)    NOT NULL DEFAULT '' COMMENT '备注信息',
     `deleted`     tinyint(1)      NOT NULL DEFAULT 0 COMMENT '软删除：0->正常；1->已删除',
+    `last_msg_read_time` datetime        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '最新消息阅读时间',
+    `last_notify_read_time` datetime        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '最新通知阅读时间',
     `create_time` datetime        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time` datetime        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`id`)
 ) ENGINE = InnoDB AUTO_INCREMENT = 1  CHARACTER SET = utf8mb4 COMMENT = '用户表' ROW_FORMAT = DYNAMIC;
 
-INSERT INTO `apihub_user` VALUES (1, 1000,'admin', 1, 1.0, '$2a$10$.BTrIQ9NU8j6/ZQ8o.7dHeku8uon.vK3Y2BO1To7mfx4HtJCBnjce', 18217235290,'1729465178@qq.com', 'https://cravatar.cn/avatar/4dc14aeb1f51b357657b9a15da59dbd3?d=monsterid&s=200','超管', 0, NOW(), NOW());
-INSERT INTO `apihub_user` VALUES (2, 1001, 'apihub', 0, 1.2, '$2a$10$.BTrIQ9NU8j6/ZQ8o.7dHeku8uon.vK3Y2BO1To7mfx4HtJCBnjce', '', 'yooongchun@qq.com', 'https://cravatar.cn/avatar/4dc14aeb1f51b357657b9a15da59dbd3?d=monsterid&s=200', '用户', 0, NOW(), NOW());
+INSERT INTO `apihub_user` VALUES (1, 1000,'admin', 1, 1.0, '$2a$10$.BTrIQ9NU8j6/ZQ8o.7dHeku8uon.vK3Y2BO1To7mfx4HtJCBnjce', 18217235290,'1729465178@qq.com', 'https://cravatar.cn/avatar/4dc14aeb1f51b357657b9a15da59dbd3?d=monsterid&s=200','超管', 0, NOW(),NOW(),NOW(), NOW());
+INSERT INTO `apihub_user` VALUES (2, 1001, 'apihub', 0, 1.2, '$2a$10$.BTrIQ9NU8j6/ZQ8o.7dHeku8uon.vK3Y2BO1To7mfx4HtJCBnjce', '', 'yooongchun@qq.com', 'https://cravatar.cn/avatar/4dc14aeb1f51b357657b9a15da59dbd3?d=monsterid&s=200', '用户', 0, NOW(), NOW(),NOW(),NOW());
 
 
 -- ----------------------------
@@ -253,7 +255,7 @@ CREATE TABLE `apihub_message`
     `user_id`    bigint(20)         NOT NULL COMMENT '用户ID',
     `parent_id` bigint(20)         COMMENT '父级ID',
     `text` text    COMMENT '内容',
-    `type`        tinyint(1)      NOT NULL DEFAULT 0 COMMENT '0->message 1->feedback',
+    `type`        tinyint(1)      NOT NULL DEFAULT 0 COMMENT '0->message 1->notify',
     `deleted`      tinyint(1)          NOT NULL DEFAULT 0 COMMENT '是否删除:0-->否，1-->是',
     `create_time`  datetime            DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time`  datetime            DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',

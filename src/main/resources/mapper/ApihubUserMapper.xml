@@ -16,6 +16,8 @@
             <result property="avatar" column="avatar" jdbcType="VARCHAR"/>
             <result property="remark" column="remark" jdbcType="VARCHAR"/>
             <result property="deleted" column="deleted" jdbcType="TINYINT"/>
+            <result property="lastMsgReadTime" column="last_msg_read_time" jdbcType="TIMESTAMP"/>
+            <result property="lastNotifyReadTime" column="last_notify_read_time" jdbcType="TIMESTAMP"/>
             <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
             <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
     </resultMap>
@@ -24,7 +26,7 @@
         id,uid,username,
         admin,balance,password,
         phone,email,avatar,
-        remark,deleted,create_time,
-        update_time
+        remark,deleted,last_msg_read_time,
+        last_notify_read_time,create_time,update_time
     </sql>
 </mapper>

@@ -73,6 +73,16 @@ public class ApihubUser implements Serializable {
     private Integer deleted;
 
     /**
+     * 最新消息阅读时间
+     */
+    private LocalDateTime lastMsgReadTime;
+
+    /**
+     * 最新通知阅读时间
+     */
+    private LocalDateTime lastNotifyReadTime;
+
+    /**
      * 创建时间
      */
     private LocalDateTime createTime;
