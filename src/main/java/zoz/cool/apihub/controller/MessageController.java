@@ -20,6 +20,7 @@ import zoz.cool.apihub.vo.MessageVo;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -75,11 +76,11 @@ public class MessageController {
     }
 
     @Operation(summary = "删除消息")
-    @DeleteMapping("/{id}")
-    public void delete(@PathVariable Long id) {
-        ApihubMessage msg = apihubMessageService.getById(id);
-        msg.setDeleted(1);
-        apihubMessageService.updateById(msg);
+    @DeleteMapping("/{ids}")
+    public void delete(@PathVariable String ids) {
+        List<ApihubMessage> msgList = apihubMessageService.listByIds(Arrays.asList(ids.split(",")));
+        msgList.forEach(msg -> msg.setDeleted(1));
+        apihubMessageService.updateBatchById(msgList);
     }
 
     @Operation(summary = "发送消息")
@@ -98,12 +99,12 @@ public class MessageController {
     @Operation(summary = "消息列表")
     @GetMapping("/list")
     public Page<MessageVo> list(
-            @RequestParam(required = false) String query,
+            @RequestParam(required = false) String keywords,
             @RequestParam(required = false, defaultValue = "1") Integer page,
             @RequestParam(required = false, defaultValue = "10") Integer pageSize,
             @RequestParam(required = false) String user,
             @RequestParam(required = false) Integer type) {
-        Page<ApihubMessage> rawMsgPage = apihubMessageService.selectPage(page, pageSize, query, user, type);
+        Page<ApihubMessage> rawMsgPage = apihubMessageService.selectPage(page, pageSize, keywords, user, type);
         Page<MessageVo> newMsgPage = new Page<>(page, pageSize);
         newMsgPage.setTotal(rawMsgPage.getTotal());
         newMsgPage.setPages(rawMsgPage.getPages());
