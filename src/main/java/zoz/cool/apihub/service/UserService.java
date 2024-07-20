@@ -65,7 +65,7 @@ public class UserService {
     }
 
     @Transactional
-    public void deduceBalance(ApihubUser user, BigDecimal amount, ProductNameEnum transactionType) {
+    public void deduceBalance(ApihubUser user, BigDecimal amount, ProductNameEnum transactionType, String msg) {
         if (user.getBalance().compareTo(amount) < 0) {
             throw new ApiException(HttpCode.BUSINESS_FAILED, "余额不足");
         }
@@ -76,7 +76,7 @@ public class UserService {
         record.setUserId(user.getUid());
         record.setTransactionId(ToolKit.getUUID());
         record.setTransactionAmount(amount);
-        record.setRemark(transactionType.getName());
+        record.setRemark(msg);
         record.setTransactionStatus(TransactionStatusEnum.SUCCEED.name());
         record.setTransactionTime(LocalDateTime.now());
         record.setTransactionType(transactionType.name());

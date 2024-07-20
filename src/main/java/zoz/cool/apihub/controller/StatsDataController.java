@@ -65,7 +65,7 @@ public class StatsDataController {
         List<ApihubAlipayOrder> orders = apihubAlipayOrderService.list(new QueryWrapper<ApihubAlipayOrder>().eq("user_id", user.getUid()).eq("trade_status", AlipayOrderStatusEnum.TRADE_SUCCESS.name()));
         orders.stream().map(ApihubAlipayOrder::getAmount).reduce(BigDecimal::add).ifPresent(metaInfoVo::setOrderAmount);
         // 消费金额
-        List<ApihubTransactionRecord> transactions = transactionRecordService.list(new QueryWrapper<ApihubTransactionRecord>().eq("user_id", user.getUid()).eq("transaction_type", TransactionStatusEnum.SUCCEED.name()));
+        List<ApihubTransactionRecord> transactions = transactionRecordService.list(new QueryWrapper<ApihubTransactionRecord>().eq("user_id", user.getUid()).eq("transaction_status", TransactionStatusEnum.SUCCEED.name()));
         transactions.stream().map(ApihubTransactionRecord::getTransactionAmount).reduce(BigDecimal::add).ifPresent(metaInfoVo::setConsumeAmount);
         return metaInfoVo;
     }

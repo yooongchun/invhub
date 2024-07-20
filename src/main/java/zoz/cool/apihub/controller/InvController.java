@@ -125,7 +125,7 @@ public class InvController {
 
         // 扣费
         if (!userService.isAdmin()) {
-            userService.deduceBalance(user, price, ProductNameEnum.INV_PARSE);
+            userService.deduceBalance(user, price, ProductNameEnum.INV_PARSE, "解析文件 " + fileInfo.getFileName());
         }
         setInvInfo(invDetail);
         invDetail.setExtra(null);
@@ -170,7 +170,7 @@ public class InvController {
                 .and(q -> q
                         .eq(invInfoVo.getInvCode() != null, "inv_code", invInfoVo.getInvCode())
                         .or().eq("inv_num", invInfoVo.getInvNum()))
-                        .or().eq("file_id", invInfoVo.getFileId()));
+                .or().eq("file_id", invInfoVo.getFileId()));
         if (exists) {
             throw new ApiException(HttpCode.VALIDATE_FAILED, "发票信息已存在");
         }
@@ -180,6 +180,7 @@ public class InvController {
         invInfo.setUserId(StpUtil.getLoginIdAsLong());
         apihubInvInfoService.save(invInfo);
     }
+
     @Operation(summary = "删除发票信息")
     @DeleteMapping("/info/{ids}")
     public void delete(@PathVariable String ids) {
