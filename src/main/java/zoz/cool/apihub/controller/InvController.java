@@ -68,7 +68,7 @@ public class InvController {
     @Operation(summary = "解析发票", description = "解析发票接口")
     @PostMapping("/detail/parse")
     @Transactional
-    public ApihubInvDetail parseInvData(@RequestParam Long fileId) {
+    public void parseInvData(@RequestParam Long fileId) {
         ApihubFileInfo fileInfo = apihubFileInfoService.getById(fileId);
         if (fileInfo == null) {
             log.warn("文件不存在，fileId={}", fileId);
@@ -82,7 +82,7 @@ public class InvController {
         ApihubInvDetail invDetail = apihubInvDetailService.getByFileId(fileId);
         // 文件+用户唯一确认一个任务
         if (invDetail != null && invDetail.getUserId().equals(user.getUid())) {
-            return invDetail;
+            throw new ApiException(HttpCode.BUSINESS_EXISTS, "任务已存在");
         }
         // 获取文件
         FileTypeEnum fileTypeEnum = FileTypeEnum.getFileType(fileInfo.getFileType());
@@ -102,7 +102,6 @@ public class InvController {
         invDetail.setUserId(user.getUid());
         invDetail.setStatus(InvStatusEnum.PROCESSING.getCode());
         invDetail.setMethod(InvMethodEnum.BAIDU.name());
-        apihubInvDetailService.save(invDetail);
 
         byte[] fileBytes = storageService.download(fileInfo.getObjectName());
         String base64String;
@@ -115,21 +114,28 @@ public class InvController {
         if (baiduOcrVo == null) {
             invDetail.setStatus(InvStatusEnum.FAILED.getCode());
             apihubInvDetailService.updateById(invDetail);
+            apihubInvDetailService.save(invDetail);
             throw new ApiException(HttpCode.BUSINESS_FAILED, "解析失败");
+        }
+        // 判断数据是否已存在：发票号码+发票代码+用户
+        boolean exists = apihubInvInfoService.exists(new QueryWrapper<ApihubInvInfo>()
+                .eq(baiduOcrVo.getInvoiceCode()!=null, "inv_code", baiduOcrVo.getInvoiceCode())
+                .eq("inv_num", baiduOcrVo.getInvoiceNum())
+                .eq("user_id", user.getUid()));
+        if (exists) {
+            throw new ApiException(HttpCode.BUSINESS_EXISTS, "发票信息已存在");
         }
         // 成功，保存数据
         invDetail.setStatus(InvStatusEnum.SUCCEED.getCode());
         invService.convertAndCopyFields(baiduOcrVo, invDetail);
         invDetail.setExtra(JSONUtil.toJsonStr(baiduOcrVo));
-        apihubInvDetailService.updateById(invDetail);
+        apihubInvDetailService.save(invDetail);
 
         // 扣费
         if (!userService.isAdmin()) {
             userService.deduceBalance(user, price, ProductNameEnum.INV_PARSE, "解析文件 " + fileInfo.getFileName());
         }
         setInvInfo(invDetail);
-        invDetail.setExtra(null);
-        return invDetail;
     }
 
     @Operation(summary = "获取发票信息", description = "获取发票信息接口")

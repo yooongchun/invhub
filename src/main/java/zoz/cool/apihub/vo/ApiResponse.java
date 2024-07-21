@@ -65,6 +65,10 @@ public class ApiResponse<T> {
         return new ApiResponse<>(HttpCode.SUCCESS.getCode(), HttpCode.BUSINESS_FAILED.getCode(), message, null);
     }
 
+    public static <T> ApiResponse<T> businessFailed(HttpCode businessCode, String message) {
+        return new ApiResponse<>(HttpCode.SUCCESS.getCode(), businessCode.getCode(), message, null);
+    }
+
     /**
      * 失败返回结果
      */

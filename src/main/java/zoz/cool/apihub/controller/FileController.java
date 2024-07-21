@@ -76,7 +76,7 @@ public class FileController {
         // 已存在则不重复上传
         ApihubFileInfo fileInfo = apihubFileInfoService.getByFileHash(fileHash, StpUtil.getLoginIdAsLong());
         if (fileInfo != null) {
-            return fileInfo;
+            throw new ApiException(HttpCode.BUSINESS_EXISTS, "文件已存在");
         }
         fileInfo = new ApihubFileInfo();
         fileInfo.setUserId(StpUtil.getLoginIdAsLong());

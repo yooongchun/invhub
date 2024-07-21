@@ -21,6 +21,7 @@ public enum HttpCode {
     BUSINESS_EXCEPTION(2003, "异常"),
     BUSINESS_TIMEOUT(2004, "超时"),
     BUSINESS_RETRY(2005, "重试"),
+    BUSINESS_EXISTS(2006, "已存在"),
     BUSINESS_UNKNOWN(2009, "未知");
 
     private final int code;
@@ -29,5 +30,14 @@ public enum HttpCode {
     HttpCode(int code, String message) {
         this.code = code;
         this.message = message;
+    }
+
+    public static HttpCode getHttpCode(int code) {
+        for (HttpCode httpCode : HttpCode.values()) {
+            if (httpCode.getCode() == code) {
+                return httpCode;
+            }
+        }
+        return null;
     }
 }

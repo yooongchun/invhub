@@ -86,13 +86,13 @@ public class BaiduOcrVo {
     @Schema(description = "销售方开户行及账号")
     private String SellerBank;
     @Schema(description = "合计金额")
-    private Integer TotalAmount;
+    private Double TotalAmount;
     @Schema(description = "合计税额")
-    private Integer TotalTax;
+    private Double TotalTax;
     @Schema(description = "价税合计(大写)")
     private String AmountInWords;
     @Schema(description = "价税合计(小写)")
-    private Integer AmountInFiguers;
+    private Double AmountInFiguers;
     @Schema(description = "收款人")
     private String Payee;
     @Schema(description = "复核")
