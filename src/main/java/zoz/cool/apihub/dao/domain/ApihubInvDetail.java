@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import lombok.Data;
 
@@ -199,12 +200,12 @@ public class ApihubInvDetail implements Serializable {
     /**
      * 合计金额
      */
-    private Integer totalAmount;
+    private BigDecimal totalAmount;
 
     /**
      * 合计税额
      */
-    private Integer totalTax;
+    private BigDecimal totalTax;
 
     /**
      * 价税合计(大写)
@@ -214,7 +215,7 @@ public class ApihubInvDetail implements Serializable {
     /**
      * 价税合计(小写)
      */
-    private Integer amountInFiguers;
+    private BigDecimal amountInFiguers;
 
     /**
      * 收款人

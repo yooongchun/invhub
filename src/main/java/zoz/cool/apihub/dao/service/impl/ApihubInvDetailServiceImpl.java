@@ -8,10 +8,10 @@ import zoz.cool.apihub.dao.mapper.ApihubInvDetailMapper;
 import org.springframework.stereotype.Service;
 
 /**
- * @author zhayongchun
- * @description 针对表【apihub_inv_detail(发票详情表)】的数据库操作Service实现
- * @createDate 2024-07-11 16:07:07
- */
+* @author zhayongchun
+* @description 针对表【apihub_inv_detail(发票详情表)】的数据库操作Service实现
+* @createDate 2024-08-07 12:32:03
+*/
 @Service
 public class ApihubInvDetailServiceImpl extends ServiceImpl<ApihubInvDetailMapper, ApihubInvDetail>
         implements ApihubInvDetailService {

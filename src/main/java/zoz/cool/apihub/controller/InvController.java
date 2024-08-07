@@ -119,7 +119,7 @@ public class InvController {
         }
         // 判断数据是否已存在：发票号码+发票代码+用户
         boolean exists = apihubInvInfoService.exists(new QueryWrapper<ApihubInvInfo>()
-                .eq(baiduOcrVo.getInvoiceCode()!=null, "inv_code", baiduOcrVo.getInvoiceCode())
+                .eq(baiduOcrVo.getInvoiceCode() != null, "inv_code", baiduOcrVo.getInvoiceCode())
                 .eq("inv_num", baiduOcrVo.getInvoiceNum())
                 .eq("user_id", user.getUid()));
         if (exists) {
@@ -196,7 +196,15 @@ public class InvController {
 
     @Operation(summary = "发票列表")
     @GetMapping("/info/list")
-    public Page<InvInfoVo> invList(@RequestParam(required = false, defaultValue = "1") Integer pageNum, @RequestParam(required = false, defaultValue = "10") Integer pageSize, @RequestParam(required = false) String keywords, @RequestParam(required = false) Integer checked, @RequestParam(required = false) Integer reimbursed, @RequestParam(required = false) BigDecimal minAmount, @RequestParam(required = false) BigDecimal maxAmount, @RequestParam(required = false) LocalDate startTime, @RequestParam(required = false) LocalDate endTime) {
+    public Page<InvInfoVo> invList(@RequestParam(required = false, defaultValue = "1") Integer pageNum,
+                                   @RequestParam(required = false, defaultValue = "10") Integer pageSize,
+                                   @RequestParam(required = false) String keywords,
+                                   @RequestParam(required = false) Integer checked,
+                                   @RequestParam(required = false) Integer reimbursed,
+                                   @RequestParam(required = false) BigDecimal minAmount,
+                                   @RequestParam(required = false) BigDecimal maxAmount,
+                                   @RequestParam(required = false) LocalDate startTime,
+                                   @RequestParam(required = false) LocalDate endTime) {
         Page<ApihubInvInfo> rawPageData = apihubInvInfoService.list(StpUtil.getLoginIdAsLong(), userService.isAdmin(), pageNum, pageSize, checked, reimbursed, startTime, endTime, keywords, minAmount, maxAmount);
         Page<InvInfoVo> pageData = new Page<>(pageNum, pageSize);
         pageData.setTotal(rawPageData.getTotal());
@@ -259,7 +267,7 @@ public class InvController {
         invInfo.setInvDate(TimeUtil.parseLocalDate(invDetail.getInvoiceDate()));
         InvTypeEnum invType = InvTypeEnum.getEnumByName(invDetail.getInvoiceType());
         invInfo.setInvType(invType.getCode());
-        invInfo.setAmount(new BigDecimal(invDetail.getTotalAmount()));
+        invInfo.setAmount(invDetail.getTotalAmount());
         invInfo.setTax(invDetail.getTotalTax().toString());
         invInfo.setMethod(InvMethodEnum.AUTO.name());
         apihubInvInfoService.save(invInfo);
