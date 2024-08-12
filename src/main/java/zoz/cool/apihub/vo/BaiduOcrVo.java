@@ -3,6 +3,7 @@ package zoz.cool.apihub.vo;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Data
@@ -86,13 +87,13 @@ public class BaiduOcrVo {
     @Schema(description = "销售方开户行及账号")
     private String SellerBank;
     @Schema(description = "合计金额")
-    private Double TotalAmount;
+    private BigDecimal TotalAmount;
     @Schema(description = "合计税额")
-    private Double TotalTax;
+    private BigDecimal TotalTax;
     @Schema(description = "价税合计(大写)")
     private String AmountInWords;
     @Schema(description = "价税合计(小写)")
-    private Double AmountInFiguers;
+    private BigDecimal AmountInFiguers;
     @Schema(description = "收款人")
     private String Payee;
     @Schema(description = "复核")
