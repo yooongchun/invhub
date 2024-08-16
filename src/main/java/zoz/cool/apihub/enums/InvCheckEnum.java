@@ -10,7 +10,9 @@ public enum InvCheckEnum {
     NOT_FOUND(31, "查无此票"),
     INCONSISTENT(32, "不一致"),
     INVALID(33, "已作废"),
-    FAILED(40, "查验失败");
+    FAILED(40, "查验失败"),
+    EXCEED_TIMES(50, "超过查验次数"),
+    ACCESS_LIMITED(51, "访问被限制");
 
     private final Integer code;
     private final String desc;
