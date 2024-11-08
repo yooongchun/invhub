@@ -14,10 +14,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zoz.cool.apihub.dao.domain.*;
-import zoz.cool.apihub.dao.service.ApihubFileInfoService;
-import zoz.cool.apihub.dao.service.ApihubInvDetailService;
-import zoz.cool.apihub.dao.service.ApihubInvInfoService;
-import zoz.cool.apihub.dao.service.ApihubProductPriceService;
+import zoz.cool.apihub.dao.service.*;
 import zoz.cool.apihub.dao.service.impl.ApihubUserServiceImpl;
 import zoz.cool.apihub.delegate.BaiduOcrDelegate;
 import zoz.cool.apihub.enums.*;
@@ -64,6 +61,8 @@ public class InvController {
     private InvService invService;
     @Resource
     private ApihubUserServiceImpl apihubUserServiceImpl;
+    @Resource
+    private ApihubInvCheckTaskService apihubInvCheckTaskService;
 
     @Operation(summary = "解析发票", description = "解析发票接口")
     @PostMapping("/detail/parse")
@@ -136,6 +135,36 @@ public class InvController {
             userService.deduceBalance(user, price, ProductNameEnum.INV_PARSE, "解析文件 " + fileInfo.getFileName());
         }
         setInvInfo(invDetail);
+    }
+
+    @Operation(summary = "查验发票", description = "查验发票接口")
+    @PostMapping("/detail/check/{invIdList}")
+    public List<Long> checkInv(@PathVariable String invIdList) {
+        List<Long> idList = StrUtil.split(invIdList, ',').stream().map(Long::parseLong).toList();
+        ApihubUser user = userService.getLoginUser();
+        List<Long> taskIdList = new ArrayList<>();
+        for (Long invId : idList) {
+            // Inv信息必须存在
+            ApihubInvInfo invInfo = getWithAuth(invId);
+            ApihubInvCheckTask oldTask = apihubInvCheckTaskService.getInvCheckTaskByInvIdUid(invId, user.getUid());
+            if (oldTask != null) {
+                // 已存在任务，但是不为成功，会重试
+                if (oldTask.getStatus().equals(InvCheckStatusEnum.FAIL.getCode())) {
+                    oldTask.setStatus(InvCheckStatusEnum.INIT.getCode());
+                    apihubInvCheckTaskService.updateById(oldTask);
+                }
+                taskIdList.add(oldTask.getId());
+            } else {
+                // 否则新建
+                ApihubInvCheckTask invCheckTask = new ApihubInvCheckTask();
+                invCheckTask.setInvId(invInfo.getId());
+                invCheckTask.setUserId(user.getUid());
+                invCheckTask.setStatus(InvCheckStatusEnum.INIT.getCode());
+                apihubInvCheckTaskService.save(invCheckTask);
+                taskIdList.add(invCheckTask.getId());
+            }
+        }
+        return taskIdList;
     }
 
     @Operation(summary = "获取发票信息", description = "获取发票信息接口")

@@ -5,9 +5,10 @@ import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
-import cn.hutool.json.JSONArray;
+import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.microsoft.playwright.*;
+import com.microsoft.playwright.Frame;
 import com.microsoft.playwright.options.LoadState;
 import lombok.extern.slf4j.Slf4j;
 import zoz.cool.apihub.dao.domain.ApihubInvDetail;
@@ -17,16 +18,15 @@ import zoz.cool.apihub.utils.FileUtil;
 import zoz.cool.apihub.vo.InvCheckInfoVo;
 
 import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
 
@@ -62,22 +62,10 @@ public class BrowserClient {
     public InvCheckInfoVo runCheck() {
         InvCheckInfoVo vo = new InvCheckInfoVo();
         try (Playwright playwright = Playwright.create()) {
-            BrowserType.LaunchOptions options = new BrowserType.LaunchOptions().setHeadless(headless).setArgs(List.of("--disable-infobars",
-                    "--start-maximized",
-                    "--disable-dev-shm-usage",
-                    "--no-sandbox",
-                    "--disable-gpu",
-                    "--disable-extensions",
-                    "--disable-blink-features=AutomationControlled",
-                    "--disable-web-security",
-                    "--disable-features=IsolateOrigins,site-per-process"));
+            BrowserType.LaunchOptions options = new BrowserType.LaunchOptions().setHeadless(headless).setArgs(List.of("--disable-infobars", "--start-maximized", "--disable-dev-shm-usage", "--no-sandbox", "--disable-gpu", "--disable-extensions", "--disable-blink-features=AutomationControlled", "--disable-web-security", "--disable-features=IsolateOrigins,site-per-process"));
             try (Browser browser = playwright.chromium().launch(options)) {
                 // 获取一个浏览器实例（自动导航到目标页面）
-                Browser.NewContextOptions contextOptions = new Browser.NewContextOptions()
-                        .setIgnoreHTTPSErrors(true)
-                        .setLocale("zh-CN")
-                        .setViewportSize(1920, 1080)
-                        .setUserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36");
+                Browser.NewContextOptions contextOptions = new Browser.NewContextOptions().setIgnoreHTTPSErrors(true).setLocale("zh-CN").setViewportSize(1920, 1080).setUserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36");
                 BrowserContext context = browser.newContext(contextOptions);
                 Page page = context.newPage();
                 page.evaluate("() =>{ Object.defineProperties(navigator,{ webdriver:{ get: () => false } }) }");
@@ -100,6 +88,8 @@ public class BrowserClient {
                     makeScreenshot(page);
                     return vo;
                 }
+
+                // 开始获取字段
                 Frame dialogFrame = null;
                 for (int i = 0; i < MAX_TRY_WAIT_FRAME; i++) {
                     if (checkLimited(page)) {
@@ -147,7 +137,9 @@ public class BrowserClient {
                     return vo;
                 }
                 try {
-                    return getDetail(dialogFrame);
+                    InvCheckInfoVo invCheckInfoVo = getDetail(dialogFrame);
+                    invCheckInfoVo.setImage(getCaptureWithCrop(page));
+                    return invCheckInfoVo;
                 } catch (Exception e) {
                     log.error("parse detail failed", e);
                     makeScreenshot(page);
@@ -167,6 +159,7 @@ public class BrowserClient {
         // 尝试填写识别验证码
         try {
             // 获取验证码图片
+            sleep(1000);
             String base64Img = getVerifyImg(page);
             // 保存验证码图片
             if (autoSave) {
@@ -236,6 +229,7 @@ public class BrowserClient {
 
     private InvCheckInfoVo getDetail(Frame frame) {
         InvCheckInfoVo vo = new InvCheckInfoVo();
+        vo.setDetail(new ApihubInvDetail());
         // 获取详情
         Map<String, String> invMap = new HashMap<>() {{
             put("fpcc", "发票标题");
@@ -289,11 +283,13 @@ public class BrowserClient {
                     String invKey = eleKey.textContent();
                     String invVal = eleVal.textContent();
                     if (!detail.containsKey(invKey)) {
-                        detail.put(invKey, List.of(invVal));
+                        detail.put(invKey, new ArrayList<>(List.of(invVal)));
                     } else {
                         detail.get(invKey).add(invVal);
                     }
                 }
+                // 货物栏
+                vo.getDetail().setCommodity(JSONUtil.toJsonStr(detail));
                 log.info("details={}", detail);
             }
         } catch (Exception e) {
@@ -301,6 +297,7 @@ public class BrowserClient {
             vo.setCheckStatus(InvCheckEnum.FAILED);
             return vo;
         }
+        vo.setCheckStatus(InvCheckEnum.SUCCESS);
         return vo;
     }
 
@@ -322,13 +319,20 @@ public class BrowserClient {
             case "销方开户行及账户" -> detail.setSellerBank(invVal);
             case "备注" -> detail.setExtra(invVal);
             case "价税合计大写" -> detail.setAmountInWords(invVal);
-            case "价税合计小写" -> detail.setAmountInFiguers(BigDecimal.valueOf(Double.parseDouble(invVal)));
-            case "合计金额" -> detail.setTotalAmount(BigDecimal.valueOf(Double.parseDouble(invVal)));
-            case "合计税额" -> detail.setTotalTax(BigDecimal.valueOf(Double.parseDouble(invVal)));
+            case "价税合计小写" -> detail.setAmountInFiguers(parseAmount(invVal));
+            case "合计金额" -> detail.setTotalAmount(parseAmount(invVal));
+            case "合计税额" -> detail.setTotalTax(parseAmount(invVal));
         }
     }
 
+    private BigDecimal parseAmount(String invVal) {
+        return BigDecimal.valueOf(Double.parseDouble(invVal.replace("￥", "")));
+    }
+
     private void makeScreenshot(Page page) {
+        if (!autoSave) {
+            return;
+        }
         try {
             Path screenshotPath = Paths.get(savePath + "/screenshot");
             if (!screenshotPath.toFile().exists()) {
@@ -344,6 +348,30 @@ public class BrowserClient {
         }
     }
 
+    private BufferedImage getCaptureWithCrop(Page page) {
+        try {
+            Path tempPath = Paths.get("temp_screenshot.png");
+            page.screenshot(new Page.ScreenshotOptions().setPath(tempPath));
+            BufferedImage originalImage = ImageIO.read(tempPath.toFile());
+            int cropX = 400;
+            int cropY = 200;
+            int cropWidth = 1100;
+            int cropHeight = 880;
+            BufferedImage croppedImage = new BufferedImage(cropWidth, cropHeight, originalImage.getType());
+            Graphics2D g = croppedImage.createGraphics();
+            g.drawImage(originalImage, 0, 0, cropWidth, cropHeight, cropX, cropY, cropX + cropWidth, cropY + cropHeight, null);
+            g.dispose();
+
+            // Delete the temporary file
+            tempPath.toFile().delete();
+
+            // Return the cropped BufferedImage
+            return croppedImage;
+        } catch (IOException e) {
+            log.error("Capture and crop screenshot failed", e);
+            return null;
+        }
+    }
 
     private void saveVerifyImg(String base64Image) {
         try {
@@ -428,22 +456,22 @@ public class BrowserClient {
         byte[] imageBytes = baos.toByteArray();
         String channel = parseChannel(tip);
         String url = String.format("%s?channel=%s", detectUrl, channel);
+        log.info("Detect code, tip={}, channel={},url={}", tip, channel, url);
         for (int i = 0; i < MAX_TRY_QUERY_CODE; i++) { // 重试3次
             try (HttpResponse response = HttpRequest.post(url).form("file", imageBytes, "image.png").execute()) {
-                if (response.isOk()) {
-                    String res = response.body();
-                    JSONArray jsonArray = JSONUtil.parseArray(res);
-                    JSONArray array = (JSONArray) jsonArray.getFirst();
-                    String code = array.getFirst().toString();
-                    String ci = array.get(1).toString();
-                    log.info("tip={} ==> channel={}, code={}, ci={}", tip, channel, code, ci);
-                    return code;
-                } else {
-                    log.error("request code failed, times={},response={}", i + 1, response.body());
-                    sleep(1000);
-                }
+                assert response.isOk();
+                String responseBody = response.body();
+                log.info("responseBody={}", responseBody);
+                JSONObject rawBody = JSONUtil.parseObj(responseBody);
+                Integer code = rawBody.get("code", Integer.class);
+                assert code != null && code == 0;
+                JSONObject data = rawBody.getJSONObject("data");
+                String predLabel = data.get("pred_label", String.class);
+                String predConfidence = data.get("pred_ci", String.class);
+                log.info("channel={}, predLabel={}, predConfidence={}", channel, predLabel, predConfidence);
+                return predLabel;
             } catch (Exception e) {
-                log.error("request code failed", e);
+                log.error("request failed, try times {}", i + 1, e);
                 sleep(1000);
             }
         }
@@ -482,15 +510,16 @@ public class BrowserClient {
         }
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         ApihubInvInfo invInfo = new ApihubInvInfo();
         invInfo.setInvCode("");
-        invInfo.setInvNum("24442000000255246432");
-        invInfo.setInvDate(DateUtil.parseLocalDateTime("20240616", "yyyyMMdd").toLocalDate());
-        invInfo.setAmount(BigDecimal.valueOf(265.39 + 34.50));
+        invInfo.setInvNum("24117000000215940904");
+        invInfo.setInvDate(DateUtil.parseLocalDateTime("20240525", "yyyyMMdd").toLocalDate());
+        invInfo.setAmount(BigDecimal.valueOf(834.13));
         log.info("invInfo={}", invInfo);
-        BrowserClient client = new BrowserClient(invInfo, true, true);
-        InvCheckInfoVo res = client.runCheck();
-        log.info("check result={}", res);
+        BrowserClient client = new BrowserClient(invInfo, false, true);
+        InvCheckInfoVo invCheckInfoVo = client.runCheck();
+        log.info("Check Result Info={}", invCheckInfoVo);
+        ImageIO.write(invCheckInfoVo.getImage(), "png", Paths.get("output/screenshot/test.png").toFile());
     }
 }

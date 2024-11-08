@@ -72,4 +72,14 @@ public class EmailService {
             emailClient.sendHtmlMail(StrUtil.join(",", admins), String.format(EmailConstant.DAILY_REPORT_SUBJECT, LocalDate.now().minusDays(1)), emailContent);
         }
     }
+
+    public void notifyInvCheckFailed(String content) {
+        // 获取管理员列表
+        List<String> admins = apihubUserService.getAdmins().stream().map(ApihubUser::getEmail).filter(StrUtil::isNotEmpty).toList();
+        log.info("发票查验失败，通知管理员: {}", admins);
+        if (CollUtil.isNotEmpty(admins)) {
+            //创建邮件正文
+            emailClient.sendSimpleMail(StrUtil.join(",", admins), "发票查验任务失败", content);
+        }
+    }
 }

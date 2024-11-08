@@ -29,6 +29,11 @@ public class AsyncConfig implements AsyncConfigurer {
         return getAsyncExecutor(10, 50, 1000, "async-inv-");
     }
 
+    @Bean(name = "inv-check")
+    public ThreadPoolTaskExecutor executorInvCheck() {
+        return getAsyncExecutor(5, 10, 10000, "async-inv-check-");
+    }
+
     /**
      * 指定默认线程池
      */

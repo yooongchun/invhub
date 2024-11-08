@@ -42,7 +42,11 @@ public class AliyunStorageServiceImpl implements StorageService {
             log.error("读取字节流失败", e);
             throw new ApiException(HttpCode.INTERNAL_ERROR, "读取字节流失败");
         }
-        String savePath = String.format(savePathTmpl, TimeUtil.getLocalDateFormatted(), StpUtil.getLoginIdAsLong(), file.getOriginalFilename());
+        return upload(fileBytes, file.getOriginalFilename());
+    }
+
+    public String upload(byte[] fileBytes, String fileName) {
+        String savePath = String.format(savePathTmpl, TimeUtil.getLocalDateFormatted(), StpUtil.getLoginIdAsLong(), fileName);
         log.info("upload file to {}", savePath);
         try {
             // 创建PutObjectRequest对象。

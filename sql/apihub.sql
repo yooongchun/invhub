@@ -261,3 +261,21 @@ CREATE TABLE `apihub_message`
     `update_time`  datetime            DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`id`)
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COMMENT = '消息表' ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Table structure for apihub_inv_check_info
+-- ----------------------------
+DROP TABLE IF EXISTS `apihub_inv_check_task`;
+CREATE TABLE `apihub_inv_check_task`
+(
+    `id`          bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `user_id`     bigint UNSIGNED     NOT NULL COMMENT '用户ID',
+    `inv_id`     bigint UNSIGNED     NOT NULL COMMENT 'Inv ID',
+    `status`    tinyint(1)     NOT NULL DEFAULT 0 COMMENT '解析状态:0-->初始化，1-->查验中，2-->成功，3-->失败',
+    `deleted`     tinyint(1)     NOT NULL DEFAULT 0 COMMENT '是否删除:0-->否，1-->是',
+    `remark`      varchar(255)   NOT NULL DEFAULT '' COMMENT '备注信息',
+    `create_time` datetime       DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `update_time` datetime       DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+
+    PRIMARY KEY (`id`)
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COMMENT = '发票查验任务表' ROW_FORMAT = DYNAMIC;

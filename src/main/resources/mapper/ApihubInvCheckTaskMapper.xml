@@ -2,13 +2,12 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="dao.mapper.ApihubInvCheckInfoMapper">
+<mapper namespace="zoz.cool.apihub.dao.mapper.ApihubInvCheckTaskMapper">
 
-    <resultMap id="BaseResultMap" type="dao.domain.ApihubInvCheckInfo">
+    <resultMap id="BaseResultMap" type="zoz.cool.apihub.dao.domain.ApihubInvCheckTask">
             <id property="id" column="id" jdbcType="BIGINT"/>
             <result property="userId" column="user_id" jdbcType="BIGINT"/>
-            <result property="fileId" column="file_id" jdbcType="BIGINT"/>
-            <result property="method" column="method" jdbcType="VARCHAR"/>
+            <result property="invId" column="inv_id" jdbcType="BIGINT"/>
             <result property="status" column="status" jdbcType="TINYINT"/>
             <result property="deleted" column="deleted" jdbcType="TINYINT"/>
             <result property="remark" column="remark" jdbcType="VARCHAR"/>
@@ -17,8 +16,8 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,user_id,file_id,
-        method,status,deleted,
-        remark,create_time,update_time
+        id,user_id,inv_id,
+        status,deleted,remark,
+        create_time,update_time
     </sql>
 </mapper>
