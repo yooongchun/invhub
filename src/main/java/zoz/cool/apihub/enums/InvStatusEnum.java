@@ -9,8 +9,8 @@ public enum InvStatusEnum {
     SUCCEED(2, "成功"),
     FAILED(-1, "失败");
 
-    private Integer code;
-    private String name;
+    private final Integer code;
+    private final String name;
 
     InvStatusEnum(Integer code, String name) {
         this.code = code;

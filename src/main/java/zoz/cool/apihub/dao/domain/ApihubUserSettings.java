@@ -9,12 +9,12 @@ import java.time.LocalDateTime;
 import lombok.Data;
 
 /**
- * 发票详情表
- * @TableName apihub_inv_check_info
+ * 用户配置信息表
+ * @TableName apihub_user_settings
  */
-@TableName(value ="apihub_inv_check_info")
+@TableName(value ="apihub_user_settings")
 @Data
-public class ApihubInvCheckInfo implements Serializable {
+public class ApihubUserSettings implements Serializable {
     /**
      * 主键
      */
@@ -27,29 +27,19 @@ public class ApihubInvCheckInfo implements Serializable {
     private Long userId;
 
     /**
-     * 文件ID
+     * 是否启用配置项
      */
-    private Long fileId;
+    private Integer enabled;
 
     /**
-     * 途径：OCR->ocr，系统解析->auto
+     * 配置项名称
      */
-    private String method;
+    private String configKey;
 
     /**
-     * 解析状态:0-->初始化，1-->解析中，2-->成功，3-->失败
+     * 配置项值
      */
-    private Integer status;
-
-    /**
-     * 是否删除:0-->否，1-->是
-     */
-    private Integer deleted;
-
-    /**
-     * 备注信息
-     */
-    private String remark;
+    private String configValue;
 
     /**
      * 创建时间

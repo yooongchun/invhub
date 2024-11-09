@@ -208,25 +208,6 @@ CREATE TABLE `apihub_inv_detail`
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COMMENT = '发票详情表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
--- Table structure for apihub_inv_check_info
--- ----------------------------
-DROP TABLE IF EXISTS `apihub_inv_check_info`;
-CREATE TABLE `apihub_inv_check_info`
-(
-    `id`          bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键',
-    `user_id`     bigint UNSIGNED     NOT NULL COMMENT '用户ID',
-    `file_id`     bigint UNSIGNED     NOT NULL COMMENT '文件ID',
-    `method`      varchar(32)    DEFAULT NULL COMMENT '途径：OCR->ocr，系统解析->auto',
-    `status`    tinyint(1)     NOT NULL DEFAULT 0 COMMENT '解析状态:0-->初始化，1-->解析中，2-->成功，3-->失败',
-    `deleted`     tinyint(1)     NOT NULL DEFAULT 0 COMMENT '是否删除:0-->否，1-->是',
-    `remark`      varchar(255)   NOT NULL DEFAULT '' COMMENT '备注信息',
-    `create_time` datetime       DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    `update_time` datetime       DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-
-    PRIMARY KEY (`id`)
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COMMENT = '发票详情表' ROW_FORMAT = DYNAMIC;
-
--- ----------------------------
 -- Table structure for apihub_product_price
 -- ----------------------------
 DROP TABLE IF EXISTS `apihub_product_price`;
@@ -244,6 +225,7 @@ CREATE TABLE `apihub_product_price`
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COMMENT = '产品定价表' ROW_FORMAT = DYNAMIC;
 
 INSERT INTO `apihub_product_price` VALUES (1, 'INV_PARSE', '发票解析', 0.05, 0, '发票解析', NOW(), NOW());
+INSERT INTO `apihub_product_price` VALUES (2, 'INV_CHECK', '发票查验', 0.05, 0, '发票查验', NOW(), NOW());
 
 -- ----------------------------
 -- Table structure for apihub_message
@@ -279,3 +261,20 @@ CREATE TABLE `apihub_inv_check_task`
 
     PRIMARY KEY (`id`)
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COMMENT = '发票查验任务表' ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Table structure for apihub_user_settings
+-- ----------------------------
+DROP TABLE IF EXISTS `apihub_user_settings`;
+CREATE TABLE `apihub_user_settings`
+(
+    `id`          bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `user_id`     bigint UNSIGNED     NOT NULL COMMENT '用户ID',
+    `enabled`     tinyint(1)     NOT NULL DEFAULT 0 COMMENT '是否启用配置项',
+    `config_key`  varchar(255)   NOT NULL DEFAULT '' COMMENT '配置项名称',
+    `config_value`  varchar(255)   NOT NULL DEFAULT '' COMMENT '配置项值',
+    `create_time` datetime       DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `update_time` datetime       DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+
+    PRIMARY KEY (`id`)
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COMMENT = '用户配置信息表' ROW_FORMAT = DYNAMIC;

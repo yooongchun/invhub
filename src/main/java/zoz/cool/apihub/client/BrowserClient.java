@@ -10,6 +10,7 @@ import cn.hutool.json.JSONUtil;
 import com.microsoft.playwright.*;
 import com.microsoft.playwright.Frame;
 import com.microsoft.playwright.options.LoadState;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import zoz.cool.apihub.dao.domain.ApihubInvDetail;
 import zoz.cool.apihub.dao.domain.ApihubInvInfo;
@@ -32,12 +33,14 @@ import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertTha
 
 @Slf4j
 public class BrowserClient {
+    @Resource
     private final ApihubInvInfo invInfo;
     private static final String url = "http://inv-veri.chinatax.gov.cn/index.html";
     private static final String detectUrl = "http://43.143.247.21:8000/pred";
     private static final String savePath = "output";
     private static boolean autoSave = false;
     private static boolean headless = false;
+    private static String browserPath = "";
     private static final int MAX_TRY_VERIFY_CODE = 5; // 验证码错误重试次数
     private static final int MAX_TRY_QUERY_CODE = 3; // 请求识别验证码接口重试次数
     private static final int MAX_TRY_WAIT_YZM_IMG = 5; // 获取验证码图片（点击刷新）最大重试次数
@@ -48,10 +51,11 @@ public class BrowserClient {
         this.invInfo = invInfo;
     }
 
-    public BrowserClient(ApihubInvInfo invInfo, boolean autoSave, boolean headless) {
+    public BrowserClient(ApihubInvInfo invInfo, boolean autoSave, boolean headless, String browserPath) {
         this.invInfo = invInfo;
         BrowserClient.autoSave = autoSave;
         BrowserClient.headless = headless;
+        BrowserClient.browserPath = browserPath;
     }
 
     public BrowserClient(ApihubInvInfo invInfo, boolean autoSave) {
@@ -61,8 +65,9 @@ public class BrowserClient {
 
     public InvCheckInfoVo runCheck() {
         InvCheckInfoVo vo = new InvCheckInfoVo();
+        log.info("browserPath={}", browserPath);
         try (Playwright playwright = Playwright.create()) {
-            BrowserType.LaunchOptions options = new BrowserType.LaunchOptions().setHeadless(headless).setArgs(List.of("--disable-infobars", "--start-maximized", "--disable-dev-shm-usage", "--no-sandbox", "--disable-gpu", "--disable-extensions", "--disable-blink-features=AutomationControlled", "--disable-web-security", "--disable-features=IsolateOrigins,site-per-process"));
+            BrowserType.LaunchOptions options = new BrowserType.LaunchOptions().setExecutablePath(Paths.get(browserPath)).setHeadless(headless).setArgs(List.of("--disable-infobars", "--start-maximized", "--disable-dev-shm-usage", "--no-sandbox", "--disable-gpu", "--disable-extensions", "--disable-blink-features=AutomationControlled", "--disable-web-security", "--disable-features=IsolateOrigins,site-per-process"));
             try (Browser browser = playwright.chromium().launch(options)) {
                 // 获取一个浏览器实例（自动导航到目标页面）
                 Browser.NewContextOptions contextOptions = new Browser.NewContextOptions().setIgnoreHTTPSErrors(true).setLocale("zh-CN").setViewportSize(1920, 1080).setUserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36");
@@ -517,7 +522,7 @@ public class BrowserClient {
         invInfo.setInvDate(DateUtil.parseLocalDateTime("20240525", "yyyyMMdd").toLocalDate());
         invInfo.setAmount(BigDecimal.valueOf(834.13));
         log.info("invInfo={}", invInfo);
-        BrowserClient client = new BrowserClient(invInfo, false, true);
+        BrowserClient client = new BrowserClient(invInfo, false, true, "/home/zoz/Downloads/chrome-linux/chrome");
         InvCheckInfoVo invCheckInfoVo = client.runCheck();
         log.info("Check Result Info={}", invCheckInfoVo);
         ImageIO.write(invCheckInfoVo.getImage(), "png", Paths.get("output/screenshot/test.png").toFile());

@@ -32,7 +32,7 @@ public class ApihubInvCheckTask implements Serializable {
     private Long invId;
 
     /**
-     * 解析状态:0-->初始化，1-->查验中，2-->成功，3-->失败
+     * 解析状态:0-->初始化，除此之外，还包括查验的中间状态，比如：查无此票、不一致等
      */
     private Integer status;
 

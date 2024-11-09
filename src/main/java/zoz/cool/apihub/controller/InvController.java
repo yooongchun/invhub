@@ -2,15 +2,19 @@ package zoz.cool.apihub.controller;
 
 import cn.dev33.satoken.annotation.SaCheckLogin;
 import cn.dev33.satoken.stp.StpUtil;
+import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.google.gson.JsonObject;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import zoz.cool.apihub.dao.domain.*;
@@ -25,6 +29,7 @@ import zoz.cool.apihub.service.UserService;
 import zoz.cool.apihub.utils.FileUtil;
 import zoz.cool.apihub.utils.TimeUtil;
 import zoz.cool.apihub.vo.BaiduOcrVo;
+import zoz.cool.apihub.vo.FilePreviewVo;
 import zoz.cool.apihub.vo.InvInfoVo;
 
 import java.math.BigDecimal;
@@ -63,6 +68,8 @@ public class InvController {
     private ApihubUserServiceImpl apihubUserServiceImpl;
     @Resource
     private ApihubInvCheckTaskService apihubInvCheckTaskService;
+    @Resource
+    private ApihubInvCheckTaskService invCheckTaskService;
 
     @Operation(summary = "解析发票", description = "解析发票接口")
     @PostMapping("/detail/parse")
@@ -149,8 +156,8 @@ public class InvController {
             ApihubInvCheckTask oldTask = apihubInvCheckTaskService.getInvCheckTaskByInvIdUid(invId, user.getUid());
             if (oldTask != null) {
                 // 已存在任务，但是不为成功，会重试
-                if (oldTask.getStatus().equals(InvCheckStatusEnum.FAIL.getCode())) {
-                    oldTask.setStatus(InvCheckStatusEnum.INIT.getCode());
+                if (oldTask.getStatus().equals(InvCheckEnum.FAILED.getCode())) {
+                    oldTask.setStatus(InvCheckEnum.INIT.getCode());
                     apihubInvCheckTaskService.updateById(oldTask);
                 }
                 taskIdList.add(oldTask.getId());
@@ -159,7 +166,7 @@ public class InvController {
                 ApihubInvCheckTask invCheckTask = new ApihubInvCheckTask();
                 invCheckTask.setInvId(invInfo.getId());
                 invCheckTask.setUserId(user.getUid());
-                invCheckTask.setStatus(InvCheckStatusEnum.INIT.getCode());
+                invCheckTask.setStatus(InvCheckEnum.INIT.getCode());
                 apihubInvCheckTaskService.save(invCheckTask);
                 taskIdList.add(invCheckTask.getId());
             }
@@ -255,13 +262,53 @@ public class InvController {
                 invInfoVo.setCheckCode(invInfo.getCheckCode().substring(invInfo.getCheckCode().length() - 6));
             }
             // 查验状态
-            // TODO: 查验结果在此更新
-            invInfoVo.setInvChecked(InvCheckEnum.UNCHECKED.getCode());
+            if (invInfo.getInvCheckId() != null) {
+                // 已查验成功
+                ApihubInvDetail invDetail = apihubInvDetailService.getById(invInfo.getInvCheckId());
+                Assert.notNull(invDetail, "发票查验结果不存在！");
+                invInfoVo.setInvChecked(InvCheckEnum.SUCCESS.getCode());
+            } else {
+                // 判断一下是否有正在查验的任务
+                ApihubInvCheckTask task = invCheckTaskService.getInvCheckTaskByInvIdUid(invInfo.getId(), invInfo.getUserId());
+                if (task == null) {
+                    // 查验任务不存在
+                    invInfoVo.setInvChecked(InvCheckEnum.UNCHECKED.getCode());
+                } else {
+                    // 已存在查验任务
+                    invInfoVo.setInvChecked(task.getStatus());
+                }
+            }
             records.add(invInfoVo);
         }
         pageData.setRecords(records);
         return pageData;
     }
+
+    @Operation(summary = "发票查验结果预览", description = "查验结果预览接口")
+    @GetMapping("/{invId}/preview")
+    @Cacheable(value = "previewOSSFile", key = "inv-#invId", unless = "#result == null")
+    public FilePreviewVo filePreviewLink(@PathVariable Long invId) {
+        ApihubInvInfo invInfo = apihubInvInfoService.getById(invId);
+        Assert.notNull(invInfo, "发票不存在");
+        // 校验是否有权限
+        if (invInfo.getUserId() != StpUtil.getLoginIdAsLong() && !userService.isAdmin()) {
+            throw new ApiException(HttpCode.FORBIDDEN);
+        }
+        ApihubInvDetail invDetail = apihubInvDetailService.getById(invInfo.getInvCheckId());
+        Assert.notNull(invDetail, "查验结果不存在！");
+        Assert.notNull(invDetail.getExtra(), "查验结果未存储！");
+        // 预览
+        try {
+            JSONObject extra = JSONUtil.parseObj(invDetail.getExtra());
+            String ossPath = extra.get("invCheckImageS3Path", String.class);
+            String previewUrl = storageService.preview(ossPath);
+            Assert.notNull(previewUrl, "预览文件失败");
+            return new FilePreviewVo("image/png", previewUrl);
+        } catch (Exception e) {
+            throw new ApiException(HttpCode.INTERNAL_ERROR, "预览文件失败");
+        }
+    }
+
 
     private ApihubInvInfo getWithAuth(Long id) {
         ApihubInvInfo invInfo = apihubInvInfoService.getById(id);

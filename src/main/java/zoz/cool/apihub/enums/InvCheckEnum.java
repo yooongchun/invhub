@@ -4,8 +4,9 @@ import lombok.Getter;
 
 @Getter
 public enum InvCheckEnum {
+    INIT(0, "任务初始化"),
     UNCHECKED(10, "未查验"),
-    CHECKING(20, "查验中"),
+    PROCESSING(20, "查验中"),
     SUCCESS(30, "已查验"),
     NOT_FOUND(31, "查无此票"),
     INCONSISTENT(32, "不一致"),

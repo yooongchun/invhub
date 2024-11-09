@@ -4,6 +4,7 @@ import cn.dev33.satoken.annotation.SaCheckLogin;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -12,8 +13,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 import zoz.cool.apihub.dao.domain.ApihubUser;
+import zoz.cool.apihub.dao.domain.ApihubUserSettings;
 import zoz.cool.apihub.dao.service.ApihubUserService;
+import zoz.cool.apihub.dao.service.ApihubUserSettingsService;
 import zoz.cool.apihub.enums.HttpCode;
+import zoz.cool.apihub.enums.UserSettingEnum;
 import zoz.cool.apihub.exception.ApiException;
 import zoz.cool.apihub.service.UserService;
 import zoz.cool.apihub.utils.ToolKit;
@@ -35,6 +39,9 @@ public class UserController {
     private ApihubUserService apihubUserService;
     @Resource
     private UserService userService;
+    @Resource
+    private ApihubUserSettingsService userSettingsService;
+
 
     @Operation(summary = "用户信息", description = "获取用户信息")
     @GetMapping({"/info", "/"})
@@ -129,8 +136,34 @@ public class UserController {
 
     @Operation(summary = "用户列表", description = "获取用户列表")
     @GetMapping("/list")
-    public Page<ApihubUser> listUser(@RequestParam(defaultValue = "1") Integer pageNum, @RequestParam(defaultValue = "10") Integer pageSize, @RequestParam(required = false, name = "keywords") String kewWords, @RequestParam(required = false, name = "deleted") Integer deleted, @RequestParam(required = false) LocalDate startTime, @RequestParam(required = false) LocalDate endTime) {
+    public Page<ApihubUser> listUser(@RequestParam(defaultValue = "1") Integer
+                                             pageNum, @RequestParam(defaultValue = "10") Integer
+                                             pageSize, @RequestParam(required = false, name = "keywords") String
+                                             kewWords, @RequestParam(required = false, name = "deleted") Integer
+                                             deleted, @RequestParam(required = false) LocalDate startTime, @RequestParam(required = false) LocalDate endTime) {
         userService.checkAdmin();
         return apihubUserService.listUser(pageNum, pageSize, kewWords, deleted, startTime, endTime);
+    }
+
+    @Operation(summary = "用户配置")
+    @PostMapping("/setting")
+    @SaCheckLogin
+    public void setUserConfig(@RequestParam String key, @RequestParam String value) {
+        ApihubUser user = userService.getLoginUser();
+        UserSettingEnum configKey = UserSettingEnum.getByName(key);
+        if (configKey == null) {
+            throw new ApiException("配置项不存在:" + key);
+        }
+        ApihubUserSettings userSetting = userSettingsService.getOne(new QueryWrapper<ApihubUserSettings>().eq("config_key", key).eq("user_id", user.getUid()));
+        if (userSetting == null) {
+            userSetting = new ApihubUserSettings();
+            userSetting.setUserId(user.getUid());
+            userSetting.setConfigKey(configKey.name());
+            userSetting.setConfigValue(value);
+            userSettingsService.save(userSetting);
+        } else if (!userSetting.getConfigValue().equals(value)) {
+            userSetting.setConfigValue(value);
+            userSettingsService.updateById(userSetting);
+        }
     }
 }
