@@ -5,9 +5,11 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import zoz.cool.apihub.dao.domain.ApihubInvCheckTask;
 import zoz.cool.apihub.dao.domain.ApihubInvInfo;
 import zoz.cool.apihub.dao.domain.ApihubUser;
 import zoz.cool.apihub.dao.mapper.ApihubInvInfoMapper;
+import zoz.cool.apihub.dao.service.ApihubInvCheckTaskService;
 import zoz.cool.apihub.dao.service.ApihubInvInfoService;
 import org.springframework.stereotype.Service;
 import zoz.cool.apihub.dao.service.ApihubUserService;
@@ -30,9 +32,11 @@ public class ApihubInvInfoServiceImpl extends ServiceImpl<ApihubInvInfoMapper, A
         implements ApihubInvInfoService {
     @Resource
     private ApihubUserService apihubUserService;
+    @Resource
+    private ApihubInvCheckTaskService invCheckTaskService;
 
     public Page<ApihubInvInfo> list(Long userId, boolean isAdmin, Integer page, Integer pageSize, Integer checked, Integer reimbursed, LocalDate startDate, LocalDate endDate, String keywords,
-                                    BigDecimal minMoney, BigDecimal maxMoney) {
+                                    BigDecimal minMoney, BigDecimal maxMoney, Integer invChecked) {
         Page<ApihubInvInfo> pageData = new Page<>(page, pageSize);
         QueryWrapper<ApihubInvInfo> query = new QueryWrapper<>();
         query.eq(checked != null, "checked", checked);
@@ -49,13 +53,23 @@ public class ApihubInvInfoServiceImpl extends ServiceImpl<ApihubInvInfoMapper, A
         }
         query.in(!userIds.isEmpty(), "user_id", userIds);
         query.eq(!isAdmin, "user_id", userId);
+        if (invChecked != null) {
+            List<ApihubInvCheckTask> tasks = invCheckTaskService.list(new QueryWrapper<ApihubInvCheckTask>().eq("user_id", userId).eq("status", invChecked));
+            List<Long> invIdList = new ArrayList<>();
+            tasks.forEach(task -> invIdList.add(task.getInvId()));
+            if (!invIdList.isEmpty()) {
+                query.in("id", invIdList);
+            } else {
+                return new Page<>();
+            }
+        }
         pageData = baseMapper.selectPage(pageData, query);
         return pageData;
     }
 
     public ApihubInvInfo getByFileId(Long fileId) {
         ApihubInvInfo inv = getOne(new QueryWrapper<ApihubInvInfo>().eq("file_id", fileId));
-        if(inv == null){
+        if (inv == null) {
             throw new ApiException(HttpCode.NOT_FOUND, "未找到对应的发票信息");
         }
         return inv;

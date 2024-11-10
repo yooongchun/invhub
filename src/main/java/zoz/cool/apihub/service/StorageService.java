@@ -8,7 +8,7 @@ import org.springframework.web.multipart.MultipartFile;
 public interface StorageService {
     String upload(MultipartFile file);
 
-    String upload(byte[] fileBytes, String fileName);
+    String upload(byte[] fileBytes, String fileName, Long userId);
 
     byte[] download(String savePath);
 

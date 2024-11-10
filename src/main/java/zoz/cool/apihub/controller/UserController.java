@@ -166,4 +166,17 @@ public class UserController {
             userSettingsService.updateById(userSetting);
         }
     }
+
+    @Operation(summary = "获取指定用户配置")
+    @GetMapping("/setting/{key}")
+    @SaCheckLogin
+    public String getUserConfig(@PathVariable String key) {
+        ApihubUser user = userService.getLoginUser();
+        UserSettingEnum configKey = UserSettingEnum.getByName(key);
+        if (configKey == null) {
+            throw new ApiException("配置项不存在:" + key);
+        }
+        ApihubUserSettings userSetting = userSettingsService.getOne(new QueryWrapper<ApihubUserSettings>().eq("config_key", key).eq("user_id", user.getUid()));
+        return userSetting == null ? "0" : userSetting.getConfigValue();
+    }
 }

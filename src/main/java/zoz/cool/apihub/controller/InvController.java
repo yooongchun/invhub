@@ -156,7 +156,8 @@ public class InvController {
             ApihubInvCheckTask oldTask = apihubInvCheckTaskService.getInvCheckTaskByInvIdUid(invId, user.getUid());
             if (oldTask != null) {
                 // 已存在任务，但是不为成功，会重试
-                if (oldTask.getStatus().equals(InvCheckEnum.FAILED.getCode())) {
+                Integer oldCode = oldTask.getStatus();
+                if (oldCode.equals(InvCheckEnum.FAILED.getCode()) || oldCode.equals(InvCheckEnum.EXCEED_TIMES.getCode()) || oldCode.equals(InvCheckEnum.ACCESS_LIMITED.getCode()) || oldCode.equals(InvCheckEnum.UNCHECKED.getCode())) {
                     oldTask.setStatus(InvCheckEnum.INIT.getCode());
                     apihubInvCheckTaskService.updateById(oldTask);
                 }
@@ -207,14 +208,18 @@ public class InvController {
     @Operation(summary = "新增发票信息")
     @PostMapping("/info")
     public void add(@RequestBody InvInfoVo invInfoVo) {
+
         boolean exists = apihubInvInfoService.exists(new QueryWrapper<ApihubInvInfo>()
                 .eq("user_id", StpUtil.getLoginIdAsLong())
                 .and(q -> q
                         .eq(invInfoVo.getInvCode() != null, "inv_code", invInfoVo.getInvCode())
                         .or().eq("inv_num", invInfoVo.getInvNum()))
-                .or().eq("file_id", invInfoVo.getFileId()));
+                .or().eq(invInfoVo.getFileId() != null, "file_id", invInfoVo.getFileId()));
         if (exists) {
             throw new ApiException(HttpCode.VALIDATE_FAILED, "发票信息已存在");
+        }
+        if (invInfoVo.getFileId() == null) {
+            invInfoVo.setFileId(0L);
         }
         ApihubInvInfo invInfo = new ApihubInvInfo();
         BeanUtils.copyProperties(invInfoVo, invInfo);
@@ -236,12 +241,13 @@ public class InvController {
                                    @RequestParam(required = false, defaultValue = "10") Integer pageSize,
                                    @RequestParam(required = false) String keywords,
                                    @RequestParam(required = false) Integer checked,
+                                   @RequestParam(required = false) Integer invChecked,
                                    @RequestParam(required = false) Integer reimbursed,
                                    @RequestParam(required = false) BigDecimal minAmount,
                                    @RequestParam(required = false) BigDecimal maxAmount,
                                    @RequestParam(required = false) LocalDate startTime,
                                    @RequestParam(required = false) LocalDate endTime) {
-        Page<ApihubInvInfo> rawPageData = apihubInvInfoService.list(StpUtil.getLoginIdAsLong(), userService.isAdmin(), pageNum, pageSize, checked, reimbursed, startTime, endTime, keywords, minAmount, maxAmount);
+        Page<ApihubInvInfo> rawPageData = apihubInvInfoService.list(StpUtil.getLoginIdAsLong(), userService.isAdmin(), pageNum, pageSize, checked, reimbursed, startTime, endTime, keywords, minAmount, maxAmount, invChecked);
         Page<InvInfoVo> pageData = new Page<>(pageNum, pageSize);
         pageData.setTotal(rawPageData.getTotal());
         pageData.setPages(rawPageData.getPages());
@@ -286,7 +292,7 @@ public class InvController {
 
     @Operation(summary = "发票查验结果预览", description = "查验结果预览接口")
     @GetMapping("/{invId}/preview")
-    @Cacheable(value = "previewOSSFile", key = "inv-#invId", unless = "#result == null")
+    @Cacheable(value = "previewOSSFile", key = "'inv-'+#invId", unless = "#result == null")
     public FilePreviewVo filePreviewLink(@PathVariable Long invId) {
         ApihubInvInfo invInfo = apihubInvInfoService.getById(invId);
         Assert.notNull(invInfo, "发票不存在");

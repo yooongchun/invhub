@@ -1,5 +1,6 @@
 package zoz.cool.apihub.scheduler;
 
+import cn.hutool.core.lang.Assert;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import jakarta.annotation.Resource;
@@ -8,7 +9,6 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import zoz.cool.apihub.client.BrowserClient;
-import zoz.cool.apihub.config.BrowserConfig;
 import zoz.cool.apihub.dao.domain.*;
 import zoz.cool.apihub.dao.service.*;
 import zoz.cool.apihub.enums.InvCheckEnum;
@@ -49,8 +49,6 @@ public class InvCheck {
     private ApihubUserService apihubUserService;
     @Resource
     private ApihubUserSettingsService userSettingsService;
-    @Resource
-    private BrowserConfig browserConfig;
 
 
     private final static Integer MAX_RETRY = 5; // 最大重试次数
@@ -87,7 +85,7 @@ public class InvCheck {
                 // 随机等待1~15秒
                 Thread.sleep(ThreadLocalRandom.current().nextInt(1000, 15000));
                 ApihubInvInfo invInfo = invInfoService.getById(task.getInvId());
-                BrowserClient client = new BrowserClient(invInfo, false, true, browserConfig.getPath());
+                BrowserClient client = new BrowserClient(invInfo, false, true);
                 InvCheckInfoVo invCheckInfoVo = client.runCheck();
                 if (invCheckInfoVo.getCheckStatus() == InvCheckEnum.FAILED) {
                     // 查验失败，重试
@@ -103,11 +101,16 @@ public class InvCheck {
                 // 否则查验任务成功
                 log.info("Check Result Info={}", invCheckInfoVo);
                 ApihubInvDetail invDetail = invCheckInfoVo.getDetail();
+                Assert.notNull(invDetail, "查验失败，detail信息为空");
+                ApihubUser user = apihubUserService.getUserByUid(task.getUserId());
+                Assert.notNull(user, "用户不存在");
+                invDetail.setUserId(user.getUid());
+                invDetail.setFileId(invInfo.getFileId());
                 // 结果图片上传s3
                 if (invCheckInfoVo.getImage() != null) {
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
                     ImageIO.write(invCheckInfoVo.getImage(), "png", baos);
-                    String savePath = storageService.upload(baos.toByteArray(), "check-result.png");
+                    String savePath = storageService.upload(baos.toByteArray(), getRandomName(), user.getId());
                     Map<String, String> extra = new HashMap<>();
                     extra.put("invCheckImageS3Path", savePath);
                     invDetail.setExtra(JSONUtil.toJsonStr(extra));
@@ -122,17 +125,17 @@ public class InvCheck {
                 invInfoService.updateById(invInfo);
                 // 扣费
                 BigDecimal price = BigDecimal.valueOf(0.05);
-                if (!userService.isAdmin()) {
+                if (user.getAdmin() != 1) {
                     ApihubProductPrice productPrice = productPriceService.getOne(new QueryWrapper<ApihubProductPrice>().eq("product_code", ProductNameEnum.INV_CHECK.name()));
                     if (productPrice == null) {
                         log.error("产品定价不存在");
                     } else {
                         price = productPrice.getPrice();
                     }
-                    ApihubUser user = apihubUserService.getUserByUid(invInfo.getUserId());
-                    assert user != null;
                     userService.deduceBalance(user, price, ProductNameEnum.INV_CHECK, "查验发票 " + invInfo.getInvCode());
                 }
+                // 任务完成
+                return;
             } catch (Exception e) {
                 log.warn("发票查验任务执行失败，重试 {} 次", i + 1, e);
                 try {
@@ -145,6 +148,11 @@ public class InvCheck {
         // 重试次数用完，任务失败
         task.setStatus(InvCheckEnum.FAILED.getCode());
         apihubInvCheckTaskService.updateById(task);
+    }
+
+    private String getRandomName() {
+        // 生成随机的名字
+        return "inv-check-" + UUID.randomUUID() + ".png";
     }
 
     // 自动提交查验任务

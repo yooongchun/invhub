@@ -14,7 +14,7 @@ import java.time.LocalDate;
  */
 public interface ApihubInvInfoService extends IService<ApihubInvInfo> {
 
-    Page<ApihubInvInfo> list(Long userId, boolean isAdmin, Integer page, Integer pageSize, Integer checked, Integer reimbursed, LocalDate startDate, LocalDate endDate, String keywords, BigDecimal minMoney, BigDecimal maxMoney);
+    Page<ApihubInvInfo> list(Long userId, boolean isAdmin, Integer page, Integer pageSize, Integer checked, Integer reimbursed, LocalDate startDate, LocalDate endDate, String keywords, BigDecimal minMoney, BigDecimal maxMoney, Integer invChecked);
 
     ApihubInvInfo getByFileId(Long fileId);
 
